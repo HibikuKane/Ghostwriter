@@ -13,14 +13,22 @@ const chatHistory = document.getElementById('chat-history');
 const chatInput = document.getElementById('chat-input');
 const sendBtn = document.getElementById('send-btn');
 
-import { chatRepository } from '../memory/chat.repository.js';
 
-// ... (existing imports)
+
 
 let currentSessionId = null;
+let messageHistory = [];
 
 export function initChat() {
-    // ... (existing init)
+    if (sendBtn) sendBtn.onclick = sendMessage;
+    if (chatInput) {
+        chatInput.onkeypress = (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        };
+    }
 
     // Initialize session ID if not exists
     if (!currentSessionId) {
@@ -28,7 +36,12 @@ export function initChat() {
     }
 }
 
-// ...
+/**
+ * Show the chat interface
+ */
+export function showChat() {
+    if (chatSection) chatSection.classList.remove('hidden');
+}
 
 /**
  * Send a message

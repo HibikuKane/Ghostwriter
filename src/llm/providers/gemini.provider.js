@@ -46,21 +46,34 @@ export class GeminiProvider extends BaseProvider {
      */
     async generateResponse(messages) {
         try {
-            const contents = this._formatMessages(messages);
+            // Separate system message if present
+            const systemMessage = messages.find(m => m.role === 'system');
+            const chatMessages = messages.filter(m => m.role !== 'system');
+
+            const contents = this._formatMessages(chatMessages);
             const url = `${this.baseUrl}/models/${this.model}:generateContent?key=${this.apiKey}`;
+
+            const body = {
+                contents: contents,
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 2048, // Increased limit
+                }
+            };
+
+            // Add system instruction if supported and present
+            if (systemMessage) {
+                body.systemInstruction = {
+                    parts: [{ text: systemMessage.content }]
+                };
+            }
 
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    contents: contents,
-                    generationConfig: {
-                        temperature: 0.7,
-                        maxOutputTokens: 1024,
-                    }
-                })
+                body: JSON.stringify(body)
             });
 
             const data = await response.json();
@@ -104,15 +117,8 @@ export class GeminiProvider extends BaseProvider {
     _formatMessages(messages) {
         return messages.map(msg => {
             // Map 'assistant' to 'model' for Gemini
-            let role = msg.role;
-            if (role === 'assistant') role = 'model';
-            // Gemini doesn't strictly support 'system' in the same way as OpenAI in `contents`,
-            // but for now we'll treat system as user or model instruction or use systemInstruction field in future.
-            // For simple chat, mapping system->user is often a safe fallback or just separate it.
-            // Let's keep it simple: map 'system' to 'user' with a prefix for now, or ignore if using systemInstruction.
-
             return {
-                role: role === 'system' ? 'user' : role,
+                role: msg.role === 'assistant' ? 'model' : 'user',
                 parts: [{ text: msg.content }]
             };
         });

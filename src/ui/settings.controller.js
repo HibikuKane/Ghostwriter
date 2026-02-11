@@ -130,6 +130,7 @@ async function saveSettings() {
     const key = apiKeyInput.value.trim();
     const provider = providerSelect.value;
     const model = modelSelect.value;
+    const characterId = characterSelect.value;
 
     if (!key) {
         alert('Please enter an API Key.');
@@ -140,11 +141,14 @@ async function saveSettings() {
     localStorage.setItem('ghostwriter_api_key', key);
     localStorage.setItem('ghostwriter_provider', provider);
     localStorage.setItem('ghostwriter_model', model);
+    localStorage.setItem('ghostwriter_character', characterId);
 
     // Initialize service
     try {
         llmService.setProvider(provider, key, model);
-        log(`Settings saved. Provider: ${provider}, Model: ${model}`, 'success');
+        characterService.setActiveCharacter(characterId);
+
+        log(`Settings saved. Character: ${characterId}`, 'success');
         closeSettings();
     } catch (err) {
         log('Error initializing LLM: ' + err.message, 'error');
