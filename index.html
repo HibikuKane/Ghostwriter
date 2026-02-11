@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghostwriter - Handshake</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>👻 Ghostwriter</h1>
+            <p class="subtitle">Serverless AI Writing Partner</p>
+        </header>
+
+        <main>
+            <!-- Auth Section -->
+            <div id="auth-section">
+                <button id="auth-btn" class="btn primary">
+                    <span class="icon">G</span> Login with Google
+                </button>
+            </div>
+
+            <!-- Dashboard Section (Hidden by default) -->
+            <div id="dashboard-section" class="hidden">
+                <div class="user-info">
+                    <p>Welcome, <span id="user-email">Guest</span></p>
+                    <button id="signout-btn" class="btn text">Sign Out</button>
+                </div>
+
+                <div class="card">
+                    <h2>Phase 1: The Handshake</h2>
+                    <p>Verify connection to Google Drive by creating the workspace.</p>
+                    
+                    <button id="init-btn" class="btn success">
+                        Initializing Ghostwriter...
+                    </button>
+
+                    <div id="console-output" class="console">
+                        <div class="log-line">System standby...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="secrets.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

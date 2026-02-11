@@ -1,0 +1,6 @@
+# User credentials
+secrets.js
+
+# System files
+.DS_Store
+Thumbs.db
