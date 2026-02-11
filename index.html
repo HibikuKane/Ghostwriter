@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <!-- Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
+
 <body>
     <div id="app">
         <header>
@@ -33,7 +35,7 @@
                 <div class="card">
                     <h2>Phase 1: The Handshake</h2>
                     <p>Verify connection to Google Drive by creating the workspace.</p>
-                    
+
                     <button id="init-btn" class="btn success">
                         Initializing Ghostwriter...
                     </button>
@@ -48,6 +50,7 @@
 
     <!-- Scripts -->
     <script src="secrets.js"></script>
-    <script src="app.js"></script>
+    <script type="module" src="src/boot.js"></script>
 </body>
+
 </html>
