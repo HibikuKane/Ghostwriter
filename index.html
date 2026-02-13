@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ghostwriter - Handshake</title>
+    <link rel="icon" href="data:,">
     <link rel="stylesheet" href="style.css">
     <!-- Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -33,19 +34,80 @@
                 </div>
 
                 <div class="card">
-                    <h2>Phase 1: The Handshake</h2>
-                    <p>Verify connection to Google Drive by creating the workspace.</p>
+                    <h2>System Status</h2>
+                    <p>Ghostwriter Cortex Connection...</p>
 
                     <button id="init-btn" class="btn success">
                         Initializing Ghostwriter...
+                    </button>
+                    <button id="settings-btn" class="btn secondary">
+                        ⚙️ Settings
                     </button>
 
                     <div id="console-output" class="console">
                         <div class="log-line">System standby...</div>
                     </div>
                 </div>
+
+                <!-- Chat Section (Hidden by default) -->
+                <div id="chat-section" class="card hidden">
+                    <div id="chat-history" class="chat-history">
+                        <!-- Messages will appear here -->
+                        <div class="message assistant">
+                            <div class="bubble">Hello! I am Ghostwriter. How can I help you write today?</div>
+                        </div>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chat-input" placeholder="Type your message..." autocomplete="off">
+                        <button id="send-btn" class="btn primary">Send</button>
+                    </div>
+                </div>
             </div>
         </main>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal hidden">
+            <div class="modal-content">
+                <span id="close-settings-btn" class="close">&times;</span>
+                <h2>Settings</h2>
+
+                <div class="form-group">
+                    <label for="provider-select">LLM Provider</label>
+                    <select id="provider-select">
+                        <option value="gemini">Google Gemini</option>
+                        <!-- Future: OpenAI, Claude, etc -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="api-key-input">API Key</label>
+                    <input type="password" id="api-key-input" placeholder="Enter your API Key">
+                    <small>Stored in Google Drive. Syncs across all your devices.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="model-select">Model</label>
+                    <select id="model-select" disabled>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (Default)</option>
+                    </select>
+                    <button id="refresh-models-btn" class="btn text" style="font-size: 0.8rem;">🔄 Refresh
+                        Models</button>
+                    <small style="display:block; margin-top:5px;">Enter API Key to fetch available models.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="character-select">Character Persona</label>
+                    <select id="character-select">
+                        <option value="ghostwriter">Ghostwriter (Default)</option>
+                    </select>
+                </div>
+
+                <div class="modal-actions">
+                    <button id="test-connection-btn" class="btn secondary">Test Connection</button>
+                    <button id="save-settings-btn" class="btn primary">Save & Close</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts -->

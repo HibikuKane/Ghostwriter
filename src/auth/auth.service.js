@@ -5,6 +5,7 @@
 import { SCOPES, DISCOVERY_DOC, getClientId } from '../config.js';
 import { log } from '../utils/logger.js';
 import { updateUIState } from '../ui/ui.controller.js';
+import { loadSettingsFromDrive } from '../ui/settings.controller.js';
 
 let tokenClient;
 let gapiInited = false;
@@ -48,6 +49,13 @@ export function initAuth() {
                 }
                 log('Token received. User authenticated.', 'success');
                 updateUIState(true);
+
+                // Load settings from Google Drive after authentication
+                try {
+                    await loadSettingsFromDrive();
+                } catch (err) {
+                    log('Error loading settings after authentication: ' + err.message, 'error');
+                }
             },
         });
         gisInited = true;

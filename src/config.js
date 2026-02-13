@@ -17,3 +17,12 @@ export function getClientId() {
     }
     return window.GOOGLE_CLIENT_ID;
 }
+
+/**
+ * Storage Keys (localStorage)
+ */
+export const STORAGE_KEYS = {
+    PROVIDER: 'ghostwriter_provider',
+    MODEL: 'ghostwriter_model',
+    CHARACTER: 'ghostwriter_character'
+};
