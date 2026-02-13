@@ -5,6 +5,9 @@
 import { llmService } from '../llm/llm.service.js';
 import { log } from '../utils/logger.js';
 import { characterService } from '../persona/character.service.js';
+import { readStatusFile, updateSettings } from '../drive/drive.service.js';
+import { STORAGE_KEYS } from '../config.js';
+import { showChat } from './chat.controller.js';
 
 // DOM Elements
 const settingsBtn = document.getElementById('settings-btn');
@@ -18,12 +21,11 @@ const characterSelect = document.getElementById('character-select');
 const refreshModelsBtn = document.getElementById('refresh-models-btn');
 const testConnectionBtn = document.getElementById('test-connection-btn');
 
-export function initSettings() {
-    // Load saved settings
-    const savedKey = localStorage.getItem('ghostwriter_api_key');
-    const savedProvider = localStorage.getItem('ghostwriter_provider') || 'gemini';
-    const savedModel = localStorage.getItem('ghostwriter_model');
-    const savedCharacter = localStorage.getItem('ghostwriter_character') || 'ghostwriter';
+export async function initSettings() {
+    // Load saved settings from localStorage (non-sensitive)
+    const savedProvider = localStorage.getItem(STORAGE_KEYS.PROVIDER) || 'gemini';
+    const savedModel = localStorage.getItem(STORAGE_KEYS.MODEL);
+    const savedCharacter = localStorage.getItem(STORAGE_KEYS.CHARACTER) || 'ghostwriter';
 
     // Init Character Select
     if (characterSelect) {
@@ -36,17 +38,6 @@ export function initSettings() {
         });
         characterSelect.value = savedCharacter;
         characterService.setActiveCharacter(savedCharacter);
-    }
-
-    if (savedKey) {
-        apiKeyInput.value = savedKey;
-        // Initialize service if key exists
-        llmService.setProvider(savedProvider, savedKey, savedModel || 'gemini-1.5-flash');
-
-        // Try to verify/fetch models silently if key exists
-        if (savedProvider === 'gemini') {
-            refreshModels(savedKey, savedModel);
-        }
     }
 
     providerSelect.value = savedProvider;
@@ -66,6 +57,58 @@ export function initSettings() {
     }
 }
 
+/**
+ * Load settings from Google Drive (called after authentication)
+ */
+export async function loadSettingsFromDrive() {
+    try {
+        const statusFile = await readStatusFile();
+        if (statusFile && statusFile.settings) {
+            const settings = statusFile.settings;
+
+            if (settings.apiKey) {
+                apiKeyInput.value = settings.apiKey;
+
+                // Update localStorage with synced settings
+                if (settings.provider) localStorage.setItem(STORAGE_KEYS.PROVIDER, settings.provider);
+                if (settings.model) localStorage.setItem(STORAGE_KEYS.MODEL, settings.model);
+                if (settings.character) localStorage.setItem(STORAGE_KEYS.CHARACTER, settings.character);
+
+                // Update UI
+                if (settings.provider) providerSelect.value = settings.provider;
+                if (settings.character) {
+                    characterSelect.value = settings.character;
+                    characterService.setActiveCharacter(settings.character);
+                }
+
+                // Initialize service
+                llmService.setProvider(
+                    settings.provider || 'gemini',
+                    settings.apiKey,
+                    settings.model || 'gemini-1.5-flash'
+                );
+
+                // Try to fetch models
+                if ((settings.provider || 'gemini') === 'gemini') {
+                    refreshModels(settings.apiKey, settings.model);
+                }
+
+                log('Settings loaded from Google Drive', 'success');
+
+                // Auto-show chat if settings loaded successfully
+                const initBtn = document.getElementById('init-btn');
+                if (initBtn) {
+                    initBtn.innerText = 'Initialization Complete';
+                    initBtn.disabled = true;
+                }
+                showChat();
+            }
+        }
+    } catch (err) {
+        log('Failed to load settings from Google Drive: ' + err.message, 'error');
+    }
+}
+
 async function refreshModels(apiKey, currentModel) {
     if (!apiKey) {
         alert('Please enter an API Key first.');
@@ -77,9 +120,6 @@ async function refreshModels(apiKey, currentModel) {
         refreshModelsBtn.innerText = 'Refreshing...';
         modelSelect.disabled = true;
 
-        // Temporarily init service to fetch models (hacky but works for now)
-        // Ideally checking models shouldn't require setting the provider globally, 
-        // but our llmService wrapper is simple.
         llmService.setProvider('gemini', apiKey);
 
         const models = await llmService.listModels();
@@ -137,21 +177,32 @@ async function saveSettings() {
         return;
     }
 
-    // Save to local storage (Security Note: basic implementation)
-    localStorage.setItem('ghostwriter_api_key', key);
-    localStorage.setItem('ghostwriter_provider', provider);
-    localStorage.setItem('ghostwriter_model', model);
-    localStorage.setItem('ghostwriter_character', characterId);
-
-    // Initialize service
     try {
+        // Prepare settings object
+        const settings = {
+            apiKey: key,
+            provider: provider,
+            model: model,
+            character: characterId
+        };
+
+        // Save to Google Drive
+        await updateSettings(settings);
+
+        // Also save to localStorage for quick access
+        localStorage.setItem(STORAGE_KEYS.PROVIDER, provider);
+        localStorage.setItem(STORAGE_KEYS.MODEL, model);
+        localStorage.setItem(STORAGE_KEYS.CHARACTER, characterId);
+
+        // Initialize service
         llmService.setProvider(provider, key, model);
         characterService.setActiveCharacter(characterId);
 
-        log(`Settings saved. Character: ${characterId}`, 'success');
+        log(`Settings saved to Google Drive. Character: ${characterId}`, 'success');
         closeSettings();
     } catch (err) {
-        log('Error initializing LLM: ' + err.message, 'error');
+        log('Error saving settings: ' + err.message, 'error');
+        alert('Failed to save settings: ' + err.message);
     }
 }
 
@@ -169,8 +220,6 @@ async function testConnection() {
         testConnectionBtn.disabled = true;
         testConnectionBtn.innerText = 'Testing...';
 
-        // Temporarily set provider just for test if not saved yet
-        // Actually, just ease:
         llmService.setProvider(provider, key, model);
 
         const success = await llmService.provider.testConnection();

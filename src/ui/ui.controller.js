@@ -15,15 +15,23 @@ const dashboardSection = document.getElementById('dashboard-section');
 const initBtn = document.getElementById('init-btn');
 
 /**
- * Initialize UI Event Listeners
+ * Initialize UI Components
  */
 export function initUI() {
+    // Init logger output
+    const loggerOutput = document.getElementById('logger-output');
+    if (loggerOutput) {
+        window.loggerElement = loggerOutput;
+    }
+
     if (authBtn) authBtn.onclick = signIn;
     if (signoutBtn) signoutBtn.onclick = signOut;
     if (initBtn) initBtn.onclick = handleInitClick;
 
-    // Initialize new controllers
+    // Settings Modal
     initSettings();
+
+    // Chat Interface
     initChat();
 }
 
