@@ -61,10 +61,13 @@ export async function initSettings() {
  * Load settings from Google Drive (called after authentication)
  */
 export async function loadSettingsFromDrive() {
+    log('loadSettingsFromDrive() called', 'info');
     try {
         const statusFile = await readStatusFile();
+        log(`statusFile received: ${statusFile ? 'yes' : 'no'}`, 'info');
         if (statusFile && statusFile.settings) {
             const settings = statusFile.settings;
+            log(`Settings found in status file: ${JSON.stringify(Object.keys(settings))}`, 'info');
 
             if (settings.apiKey) {
                 apiKeyInput.value = settings.apiKey;
@@ -75,22 +78,33 @@ export async function loadSettingsFromDrive() {
                 if (settings.character) localStorage.setItem(STORAGE_KEYS.CHARACTER, settings.character);
 
                 // Update UI
+                // Update UI
                 if (settings.provider) providerSelect.value = settings.provider;
                 if (settings.character) {
                     characterSelect.value = settings.character;
                     characterService.setActiveCharacter(settings.character);
                 }
 
+                // Determine effective settings (Drive > Local > Default)
+                const effectiveProvider = settings.provider || localStorage.getItem(STORAGE_KEYS.PROVIDER) || 'gemini';
+                const effectiveModel = settings.model || localStorage.getItem(STORAGE_KEYS.MODEL) || 'gemini-1.5-flash';
+                const effectiveKey = settings.apiKey;
+
                 // Initialize service
                 llmService.setProvider(
-                    settings.provider || 'gemini',
-                    settings.apiKey,
-                    settings.model || 'gemini-1.5-flash'
+                    effectiveProvider,
+                    effectiveKey,
+                    effectiveModel
                 );
 
+                // Update Model Select UI to reflect effective model
+                if (modelSelect.options.length > 0) {
+                    modelSelect.value = effectiveModel;
+                }
+
                 // Try to fetch models
-                if ((settings.provider || 'gemini') === 'gemini') {
-                    refreshModels(settings.apiKey, settings.model);
+                if (effectiveProvider === 'gemini') {
+                    refreshModels(effectiveKey, effectiveModel);
                 }
 
                 log('Settings loaded from Google Drive', 'success');
@@ -102,10 +116,15 @@ export async function loadSettingsFromDrive() {
                     initBtn.disabled = true;
                 }
                 showChat();
+            } else {
+                log('No API key found in settings', 'warning');
             }
+        } else {
+            log('No settings found in status file', 'warning');
         }
     } catch (err) {
         log('Failed to load settings from Google Drive: ' + err.message, 'error');
+        console.error('loadSettingsFromDrive error:', err);
     }
 }
 
@@ -120,7 +139,7 @@ async function refreshModels(apiKey, currentModel) {
         refreshModelsBtn.innerText = 'Refreshing...';
         modelSelect.disabled = true;
 
-        llmService.setProvider('gemini', apiKey);
+        llmService.setProvider('gemini', apiKey, currentModel);
 
         const models = await llmService.listModels();
 
@@ -140,12 +159,18 @@ async function refreshModels(apiKey, currentModel) {
             });
 
             // Re-select current model if available, or default
-            if (currentModel && models.find(m => m.id === currentModel)) {
+            // Re-select current model if available, or default
+            if (currentModel && (models.find(m => m.id === currentModel) || true)) {
+                // We allow selecting the currentModel even if not in the list (e.g. preview models or custom fine-tuned)
                 modelSelect.value = currentModel;
+
+                // Ensure the service is using this model (in case setProvider above didn't catch it or logic changed)
+                llmService.setProvider('gemini', apiKey, currentModel);
             } else {
                 // Prefer flash or pro if available
                 const preferred = models.find(m => m.id.includes('flash')) || models[0];
                 modelSelect.value = preferred.id;
+                llmService.setProvider('gemini', apiKey, preferred.id);
             }
         }
 

@@ -64,7 +64,8 @@ async function sendMessage() {
     chatInput.value = '';
 
     // Auto-save user message
-    await chatRepository.saveSession(currentSessionId, messageHistory);
+    const savedId = await chatRepository.saveSession(currentSessionId, messageHistory);
+    if (savedId) currentSessionId = savedId;
 
     // 2. Loading State
     const loadingId = addLoadingIndicator();
@@ -79,7 +80,8 @@ async function sendMessage() {
         messageHistory.push({ role: 'assistant', content: responseText });
 
         // Auto-save assistant message
-        await chatRepository.saveSession(currentSessionId, messageHistory);
+        const savedId = await chatRepository.saveSession(currentSessionId, messageHistory);
+        if (savedId) currentSessionId = savedId;
 
     } catch (err) {
         removeMessage(loadingId);

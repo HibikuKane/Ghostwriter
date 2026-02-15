@@ -64,23 +64,41 @@ async function createStatusFile(folderId) {
         fields: 'files(id, name)'
     });
 
-    const fileContent = {
-        system: "online",
-        connected: true,
-        timestamp: new Date().toISOString(),
-        settings: null // Will store user settings (API key, provider, model, character)
-    };
-
     if (response.result.files.length > 0) {
-        // Update existing file
+        // Update existing file - preserve settings
         const fileId = response.result.files[0].id;
         log(`Found existing status.json (ID: ${fileId}). Updating...`, 'info');
+
+        // Read current content to preserve settings
+        const accessToken = gapi.client.getToken().access_token;
+        const fetchResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+            headers: { 'Authorization': 'Bearer ' + accessToken }
+        });
+
+        let existingContent = {};
+        if (fetchResponse.ok) {
+            existingContent = await fetchResponse.json();
+        }
+
+        // Update with preserved settings
+        const fileContent = {
+            system: "online",
+            connected: true,
+            timestamp: new Date().toISOString(),
+            settings: existingContent.settings || null // Preserve existing settings
+        };
 
         await updateFile(fileId, fileContent);
         log(`status.json updated!`, 'success');
     } else {
         // Create new file
         log('Creating new status.json...', 'info');
+        const fileContent = {
+            system: "online",
+            connected: true,
+            timestamp: new Date().toISOString(),
+            settings: null // Will store user settings (API key, provider, model, character)
+        };
         await createFile(folderId, 'status.json', fileContent);
         log(`status.json created!`, 'success');
     }

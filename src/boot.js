@@ -14,4 +14,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize Authentication
     initAuth();
+
+    // Initialize DevTools
+    import('./ui/devtools.js').then(module => {
+        new module.DevTools();
+        log('DevTools initialized.', 'success');
+    });
 });
