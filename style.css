@@ -34,6 +34,7 @@ h1 {
     font-size: 2.5rem;
     margin: 0;
     background: linear-gradient(45deg, #fff, #a5a5a5);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -79,6 +80,14 @@ h1 {
 
 .hidden {
     display: none !important;
+}
+
+/* Auth Section - Center alignment */
+#auth-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
 }
 
 .card {
@@ -266,7 +275,75 @@ h1 {
 
 .btn.secondary:hover {
     background-color: #555;
-}/* DevTools Styles */
+}
+
+/* Loading Screen */
+#loading-screen {
+    text-align: center;
+}
+
+.loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2rem 0;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top: 4px solid var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-message {
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* Floating Buttons */
+.floating-btn {
+    position: fixed;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--card-bg);
+    border: 1px solid #444;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    color: var(--text-main);
+    transition: transform 0.2s, background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.floating-btn:hover {
+    transform: scale(1.1);
+    background-color: #444;
+}
+
+.floating-btn.settings-btn {
+    bottom: 80px;
+}
+
+/* DevTools Styles */
 #devtools-toggle {
     position: fixed;
     bottom: 20px;
