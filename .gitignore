@@ -4,3 +4,6 @@ secrets.js
 # System files
 .DS_Store
 Thumbs.db
+
+# Strategic planning (private until project differentiation)
+.ideas/
