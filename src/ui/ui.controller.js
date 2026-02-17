@@ -3,7 +3,6 @@
  * Manages DOM elements and event listeners.
  */
 import { signIn, signOut } from '../auth/auth.service.js';
-import { createWorkspace } from '../drive/drive.service.js';
 import { initSettings } from './settings.controller.js';
 import { initChat, showChat } from './chat.controller.js';
 
@@ -12,7 +11,8 @@ const authBtn = document.getElementById('auth-btn');
 const signoutBtn = document.getElementById('signout-btn');
 const authSection = document.getElementById('auth-section');
 const dashboardSection = document.getElementById('dashboard-section');
-const initBtn = document.getElementById('init-btn');
+const loadingScreen = document.getElementById('loading-screen');
+const settingsToggle = document.getElementById('settings-toggle');
 
 /**
  * Initialize UI Components
@@ -26,7 +26,6 @@ export function initUI() {
 
     if (authBtn) authBtn.onclick = signIn;
     if (signoutBtn) signoutBtn.onclick = signOut;
-    if (initBtn) initBtn.onclick = handleInitClick;
 
     // Settings Modal
     initSettings();
@@ -43,27 +42,47 @@ export function updateUIState(isAuthenticated) {
     if (isAuthenticated) {
         authSection.classList.add('hidden');
         dashboardSection.classList.remove('hidden');
-        // We might want to show chat immediately if already initialized, 
-        // but for now let's keep it behind the "Init" flow or just show it.
-        // Let's assume after auth we are good to go for settings at least.
+        showLoadingScreen();
     } else {
         authSection.classList.remove('hidden');
         dashboardSection.classList.add('hidden');
+        hideLoadingScreen();
+        hideSettingsButton();
     }
 }
 
 /**
- * Handle Initialization Button Click
+ * Show loading screen
  */
-async function handleInitClick() {
-    if (initBtn) initBtn.disabled = true;
+export function showLoadingScreen() {
+    if (loadingScreen) {
+        loadingScreen.classList.remove('hidden');
+    }
+}
 
-    const success = await createWorkspace();
+/**
+ * Hide loading screen
+ */
+export function hideLoadingScreen() {
+    if (loadingScreen) {
+        loadingScreen.classList.add('hidden');
+    }
+}
 
-    if (success && initBtn) {
-        initBtn.innerText = "Initialization Complete";
-        showChat();
-    } else if (initBtn) {
-        initBtn.disabled = false;
+/**
+ * Show floating settings button (when API key exists)
+ */
+export function showSettingsButton() {
+    if (settingsToggle) {
+        settingsToggle.classList.remove('hidden');
+    }
+}
+
+/**
+ * Hide floating settings button
+ */
+export function hideSettingsButton() {
+    if (settingsToggle) {
+        settingsToggle.classList.add('hidden');
     }
 }

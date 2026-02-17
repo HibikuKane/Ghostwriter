@@ -8,9 +8,10 @@ import { characterService } from '../persona/character.service.js';
 import { readStatusFile, updateSettings } from '../drive/drive.service.js';
 import { STORAGE_KEYS } from '../config.js';
 import { showChat } from './chat.controller.js';
+import { hideLoadingScreen, showSettingsButton } from './ui.controller.js';
 
-// DOM Elements
-const settingsBtn = document.getElementById('settings-btn');
+// DOM Elements - Main Settings Modal
+const settingsToggle = document.getElementById('settings-toggle');
 const settingsModal = document.getElementById('settings-modal');
 const closeSettingsBtn = document.getElementById('close-settings-btn');
 const saveSettingsBtn = document.getElementById('save-settings-btn');
@@ -20,6 +21,12 @@ const modelSelect = document.getElementById('model-select');
 const characterSelect = document.getElementById('character-select');
 const refreshModelsBtn = document.getElementById('refresh-models-btn');
 const testConnectionBtn = document.getElementById('test-connection-btn');
+
+// DOM Elements - First-Time Setup Modal
+const firstSetupModal = document.getElementById('first-setup-modal');
+const firstProviderSelect = document.getElementById('first-provider-select');
+const firstApiKeyInput = document.getElementById('first-api-key-input');
+const firstSaveBtn = document.getElementById('first-save-btn');
 
 export async function initSettings() {
     // Load saved settings from localStorage (non-sensitive)
@@ -42,17 +49,24 @@ export async function initSettings() {
 
     providerSelect.value = savedProvider;
 
-    // Event Listeners
-    if (settingsBtn) settingsBtn.onclick = openSettings;
+    // Event Listeners - Main Settings
+    if (settingsToggle) settingsToggle.onclick = openSettings;
     if (closeSettingsBtn) closeSettingsBtn.onclick = closeSettings;
     if (saveSettingsBtn) saveSettingsBtn.onclick = saveSettings;
     if (testConnectionBtn) testConnectionBtn.onclick = testConnection;
     if (refreshModelsBtn) refreshModelsBtn.onclick = () => refreshModels(apiKeyInput.value, modelSelect.value);
 
+    // Event Listeners - First-Time Setup
+    if (firstSaveBtn) firstSaveBtn.onclick = saveFirstTimeSettings;
+
     // Close on click outside
     window.onclick = (event) => {
         if (event.target == settingsModal) {
             closeSettings();
+        }
+        if (event.target == firstSetupModal) {
+            // Don't allow closing first setup modal by clicking outside
+            // User must complete setup
         }
     }
 }
@@ -61,10 +75,13 @@ export async function initSettings() {
  * Load settings from Google Drive (called after authentication)
  */
 export async function loadSettingsFromDrive() {
+    log('loadSettingsFromDrive() called', 'info');
     try {
         const statusFile = await readStatusFile();
+        log(`statusFile received: ${statusFile ? 'yes' : 'no'}`, 'info');
         if (statusFile && statusFile.settings) {
             const settings = statusFile.settings;
+            log(`Settings found in status file: ${JSON.stringify(Object.keys(settings))}`, 'info');
 
             if (settings.apiKey) {
                 apiKeyInput.value = settings.apiKey;
@@ -75,37 +92,59 @@ export async function loadSettingsFromDrive() {
                 if (settings.character) localStorage.setItem(STORAGE_KEYS.CHARACTER, settings.character);
 
                 // Update UI
+                // Update UI
                 if (settings.provider) providerSelect.value = settings.provider;
                 if (settings.character) {
                     characterSelect.value = settings.character;
                     characterService.setActiveCharacter(settings.character);
                 }
 
+                // Determine effective settings (Drive > Local > Default)
+                const effectiveProvider = settings.provider || localStorage.getItem(STORAGE_KEYS.PROVIDER) || 'gemini';
+                const effectiveModel = settings.model || localStorage.getItem(STORAGE_KEYS.MODEL) || 'gemini-1.5-flash';
+                const effectiveKey = settings.apiKey;
+
                 // Initialize service
                 llmService.setProvider(
-                    settings.provider || 'gemini',
-                    settings.apiKey,
-                    settings.model || 'gemini-1.5-flash'
+                    effectiveProvider,
+                    effectiveKey,
+                    effectiveModel
                 );
 
+                // Update Model Select UI to reflect effective model
+                if (modelSelect.options.length > 0) {
+                    modelSelect.value = effectiveModel;
+                }
+
                 // Try to fetch models
-                if ((settings.provider || 'gemini') === 'gemini') {
-                    refreshModels(settings.apiKey, settings.model);
+                if (effectiveProvider === 'gemini') {
+                    refreshModels(effectiveKey, effectiveModel);
                 }
 
                 log('Settings loaded from Google Drive', 'success');
 
-                // Auto-show chat if settings loaded successfully
-                const initBtn = document.getElementById('init-btn');
-                if (initBtn) {
-                    initBtn.innerText = 'Initialization Complete';
-                    initBtn.disabled = true;
-                }
+                // Hide loading screen and show chat
+                hideLoadingScreen();
+                showSettingsButton();
                 showChat();
+            } else {
+                log('No API key found in settings', 'warning');
+                // Show first-time setup modal
+                hideLoadingScreen();
+                showFirstSetupModal();
             }
+        } else {
+            log('No settings found in status file', 'warning');
+            // Show first-time setup modal
+            hideLoadingScreen();
+            showFirstSetupModal();
         }
     } catch (err) {
         log('Failed to load settings from Google Drive: ' + err.message, 'error');
+        console.error('loadSettingsFromDrive error:', err);
+        // On error, still show first setup modal
+        hideLoadingScreen();
+        showFirstSetupModal();
     }
 }
 
@@ -120,7 +159,7 @@ async function refreshModels(apiKey, currentModel) {
         refreshModelsBtn.innerText = 'Refreshing...';
         modelSelect.disabled = true;
 
-        llmService.setProvider('gemini', apiKey);
+        llmService.setProvider('gemini', apiKey, currentModel);
 
         const models = await llmService.listModels();
 
@@ -140,12 +179,18 @@ async function refreshModels(apiKey, currentModel) {
             });
 
             // Re-select current model if available, or default
-            if (currentModel && models.find(m => m.id === currentModel)) {
+            // Re-select current model if available, or default
+            if (currentModel && (models.find(m => m.id === currentModel) || true)) {
+                // We allow selecting the currentModel even if not in the list (e.g. preview models or custom fine-tuned)
                 modelSelect.value = currentModel;
+
+                // Ensure the service is using this model (in case setProvider above didn't catch it or logic changed)
+                llmService.setProvider('gemini', apiKey, currentModel);
             } else {
                 // Prefer flash or pro if available
                 const preferred = models.find(m => m.id.includes('flash')) || models[0];
                 modelSelect.value = preferred.id;
+                llmService.setProvider('gemini', apiKey, preferred.id);
             }
         }
 
@@ -236,5 +281,80 @@ async function testConnection() {
     } finally {
         testConnectionBtn.disabled = false;
         testConnectionBtn.innerText = 'Test Connection';
+    }
+}
+
+/**
+ * Show first-time setup modal
+ */
+function showFirstSetupModal() {
+    if (firstSetupModal) {
+        firstSetupModal.classList.remove('hidden');
+    }
+}
+
+/**
+ * Close first-time setup modal
+ */
+function closeFirstSetupModal() {
+    if (firstSetupModal) {
+        firstSetupModal.classList.add('hidden');
+    }
+}
+
+/**
+ * Save settings from first-time setup modal
+ */
+async function saveFirstTimeSettings() {
+    const key = firstApiKeyInput.value.trim();
+    const provider = firstProviderSelect.value;
+
+    if (!key) {
+        alert('API 키를 입력해주세요.');
+        return;
+    }
+
+    try {
+        firstSaveBtn.disabled = true;
+        firstSaveBtn.innerText = '저장 중...';
+
+        // Prepare settings with default values
+        const settings = {
+            apiKey: key,
+            provider: provider,
+            model: 'gemini-1.5-flash', // Default model
+            character: 'ghostwriter' // Default character
+        };
+
+        // Save to Google Drive
+        await updateSettings(settings);
+
+        // Save to localStorage
+        localStorage.setItem(STORAGE_KEYS.PROVIDER, provider);
+        localStorage.setItem(STORAGE_KEYS.MODEL, settings.model);
+        localStorage.setItem(STORAGE_KEYS.CHARACTER, settings.character);
+
+        // Initialize service
+        llmService.setProvider(provider, key, settings.model);
+        characterService.setActiveCharacter(settings.character);
+
+        // Also update main settings modal fields
+        if (apiKeyInput) apiKeyInput.value = key;
+        if (providerSelect) providerSelect.value = provider;
+
+        log('Initial API key saved successfully', 'success');
+
+        // Close first-time modal
+        closeFirstSetupModal();
+
+        // Show settings button and chat
+        showSettingsButton();
+        showChat();
+    } catch (err) {
+        log('Error saving initial settings: ' + err.message, 'error');
+        alert('설정 저장에 실패했습니다: ' + err.message);
+    } finally {
+        firstSaveBtn.disabled = false;
+        firstSaveBtn.innerText = '저장하고 시작하기';
     }
 }

@@ -30,11 +30,39 @@ class LLMService {
      * @param {Array} messages 
      * @returns {Promise<string>}
      */
+    /**
+     * Generate text
+     * @param {Array} messages 
+     * @returns {Promise<string>}
+     */
     async generate(messages) {
         if (!this.provider) {
             throw new Error('No LLM Provider configured.');
         }
-        return await this.provider.generateResponse(messages);
+
+        // Emit Generation Start
+        this._emit('generation_start', { messages });
+
+        const startTime = Date.now();
+        try {
+            const response = await this.provider.generateResponse(messages);
+            const duration = Date.now() - startTime;
+
+            // Emit Generation End (Mocking token usage for now if not provided)
+            this._emit('generation_end', {
+                response,
+                duration,
+                tokenUsage: {
+                    input: messages.reduce((acc, m) => acc + m.content.length / 4, 0), // Estimate
+                    output: response.length / 4
+                }
+            });
+
+            return response;
+        } catch (error) {
+            this._emit('generation_error', { error });
+            throw error;
+        }
     }
 
     async testConnection() {
@@ -46,6 +74,24 @@ class LLMService {
         if (!this.provider || typeof this.provider.listModels !== 'function') return [];
         return await this.provider.listModels();
     }
+
+    /**
+     * Subscribe to LLM events
+     * @param {string} event - 'generation_start' | 'generation_end' | 'generation_error'
+     * @param {Function} callback 
+     */
+    on(event, callback) {
+        if (!this.listeners[event]) this.listeners[event] = [];
+        this.listeners[event].push(callback);
+    }
+
+    _emit(event, data) {
+        if (this.listeners[event]) {
+            this.listeners[event].forEach(cb => cb(data));
+        }
+    }
 }
 
 export const llmService = new LLMService();
+// Initialize listeners map
+llmService.listeners = {};

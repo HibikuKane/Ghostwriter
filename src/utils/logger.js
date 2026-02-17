@@ -19,6 +19,19 @@ export function log(msg, type = 'info') {
         consoleOutput.appendChild(div);
         consoleOutput.scrollTop = consoleOutput.scrollHeight;
     } else {
-        console.warn('Console output element not found:', msg);
+        // console.warn('Console output element not found:', msg);
     }
+
+    // Notify subscribers
+    subscribers.forEach(cb => cb({ time, msg, type }));
 }
+
+/**
+ * Subscribe to log events
+ * @param {Function} callback 
+ */
+export function subscribeLog(callback) {
+    subscribers.push(callback);
+}
+
+const subscribers = [];

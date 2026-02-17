@@ -33,19 +33,12 @@
                     <button id="signout-btn" class="btn text">Sign Out</button>
                 </div>
 
-                <div class="card">
-                    <h2>System Status</h2>
-                    <p>Ghostwriter Cortex Connection...</p>
-
-                    <button id="init-btn" class="btn success">
-                        Initializing Ghostwriter...
-                    </button>
-                    <button id="settings-btn" class="btn secondary">
-                        ⚙️ Settings
-                    </button>
-
-                    <div id="console-output" class="console">
-                        <div class="log-line">System standby...</div>
+                <!-- Loading Screen -->
+                <div id="loading-screen" class="card">
+                    <div class="loading-content">
+                        <div class="spinner"></div>
+                        <h2>로그인 데이터 처리중...</h2>
+                        <p class="loading-message">설정을 불러오는 중입니다.</p>
                     </div>
                 </div>
 
@@ -64,6 +57,34 @@
                 </div>
             </div>
         </main>
+
+        <!-- First-Time API Key Setup Modal -->
+        <div id="first-setup-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2>🔑 API 키 설정</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+                    Ghostwriter를 사용하려면 LLM API 키가 필요합니다.
+                </p>
+
+                <div class="form-group">
+                    <label for="first-provider-select">LLM Provider</label>
+                    <select id="first-provider-select">
+                        <option value="gemini">Google Gemini</option>
+                        <!-- Future: OpenAI, Claude, etc -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="first-api-key-input">API Key</label>
+                    <input type="password" id="first-api-key-input" placeholder="Enter your API Key">
+                    <small>Google Drive에 암호화되어 저장되며, 모든 기기에서 동기화됩니다.</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button id="first-save-btn" class="btn primary">저장하고 시작하기</button>
+                </div>
+            </div>
+        </div>
 
         <!-- Settings Modal -->
         <div id="settings-modal" class="modal hidden">
@@ -108,6 +129,11 @@
                 </div>
             </div>
         </div>
+
+        <!-- Floating Settings Button (shown when API key exists) -->
+        <button id="settings-toggle" class="floating-btn settings-btn hidden" title="Settings">
+            ⚙️
+        </button>
     </div>
 
     <!-- Scripts -->
