@@ -1,10 +1,8 @@
-[메인](../index.md) > [Architecture](./README.md) > 프로젝트 구조
-
 # 프로젝트 구조
 
 > **목적**: Ghostwriter의 디렉토리 구조와 각 모듈의 역할을 설명합니다.
 
-**마지막 업데이트**: 2026-02-15
+**마지막 업데이트**: 2026-02-19
 
 ---
 
@@ -15,19 +13,26 @@ Ghostwriter/
 ├── index.html                  # 메인 HTML
 ├── style.css                   # 스타일
 ├── secrets.js                  # 환경 변수 (gitignore)
-├── docs/                       # 📚 설계 문서
-│   ├── index.md                # 문서 메인 페이지
-│   ├── architecture/           # 아키텍처 문서
-│   ├── features/               # 기능별 상세 설계
+├── .agent/                     # 🤖 AI 개발 가이드 & 기술 레퍼런스
+│   ├── README.md               # AI 세션 시작점 (스마트 라우터)
+│   ├── principles/             # 설계 원칙 & 코딩 컨벤션
+│   ├── reference/              # 기술 레퍼런스 (이 파일 포함)
 │   ├── guides/                 # How-to 가이드
-│   └── api/                    # API 레퍼런스 (향후)
+│   └── workflows/              # 자동화 워크플로우
+├── .ideas/                     # 💡 기획 & 방향성 (gitignore)
+│   ├── features.md             # 기능 목록
+│   ├── roadmap.md              # 개발 로드맵
+│   ├── current-status.md       # 현재 진행 상태
+│   └── technical-dependencies.md # 기술 의존성
+├── docs/                       # 📚 외부 소개용 문서
+│   └── README.md               # 프로젝트 소개 1페이지
 └── src/
     ├── boot.js                 # 애플리케이션 진입점
     ├── config.js               # 설정 상수
     ├── auth/                   # 인증
     ├── drive/                  # Drive API
     ├── initialization/         # 초기화 (계획 중)
-    ├── llm/                    # L LM 통합
+    ├── llm/                    # LLM 통합
     ├── memory/                 # 스토리지
     ├── persona/                # 캐릭터
     ├── ui/                     # UI 컨트롤러
@@ -45,6 +50,8 @@ Ghostwriter/
 
 - DOM 로드 후 실행
 - UI 초기화
+- 캐릭터 리스트 초기화
+- 세션 툴바 초기화
 - 인증 시스템 초기화  
 - DevTools 로드
 
@@ -84,7 +91,7 @@ Ghostwriter/
 | `workspace.initializer.js` | 폴더 구조 생성 |
 | `settings.initializer.js` | 설정 로드 |
 
-상세 내용: [initialization.md](../features/initialization.md)
+상세 내용: [initialization.md](./initialization.md)
 
 ### `src/llm/`
 
@@ -96,8 +103,6 @@ Ghostwriter/
 | `providers/base-provider.js` | Provider 기본 클래스 |
 | `providers/gemini.provider.js` | Google Gemini 구현 |
 
-**확장 방법**: [adding-llm-provider.md](../guides/adding-llm-provider.md)
-
 ### `src/memory/`
 
 **역할**: 데이터 저장 관리
@@ -105,7 +110,7 @@ Ghostwriter/
 | 파일 | 역할 |
 |------|------|
 | `storage.manager.js` | Drive 파일 CRUD, 폴더 관리 |
-| `chat.repository.js` | 채팅 세션 저장/로드 |
+| `chat.repository.js` | 채팅 세션 저장/로드/리스트/삭제 |
 
 ### `src/persona/`
 
@@ -113,7 +118,7 @@ Ghostwriter/
 
 | 파일 | 역할 |
 |------|------|
-| `character.service.js` | 캐릭터 로드/생성 |
+| `character.service.js` | 캐릭터 CRUD + Drive 연동, 샘플 캐릭터 보호 |
 
 ### `src/ui/`
 
@@ -123,6 +128,8 @@ Ghostwriter/
 |------|------|
 | `ui.controller.js` | UI 상태 관리 (로그인/로그아웃 UI 전환) |
 | `chat.controller.js` | 채팅 UI 컨트롤 |
+| `character.controller.js` | 캐릭터 사이드바 + CRUD 모달 |
+| `session.controller.js` | 세션 드롭다운 + 캐릭터별 세션 전환 |
 | `settings.controller.js` | 설정 모달 관리 |
 | `devtools.js` | 개발자 도구 |
 
@@ -138,7 +145,7 @@ Ghostwriter/
 
 ## 🎯 네이밍 컨벤션
 
-전체 컨벤션: [coding-conventions.md](./coding-conventions.md)
+전체 컨벤션: [coding-conventions.md](../principles/coding-conventions.md)
 
 | 타입 | 컨벤션 | 예시 |
 |------|--------|------|
@@ -153,12 +160,4 @@ Ghostwriter/
 ## 📚 관련 문서
 
 - [데이터 흐름](./data-flow.md) - Drive 폴더 구조
-- [코딩 컨벤션](./coding-conventions.md) - 상세 스타일 가이드
-
----
-
-[← Architecture 홈](./README.md) | [← 메인으로](../index.md)
-
----
-
-**마지막 업데이트**: 2026-02-15
+- [코딩 컨벤션](../principles/coding-conventions.md) - 상세 스타일 가이드
