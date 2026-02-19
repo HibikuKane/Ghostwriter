@@ -4,6 +4,8 @@
  */
 import { initAuth } from './auth/auth.service.js';
 import { initUI } from './ui/ui.controller.js';
+import { initCharacterList } from './ui/character.controller.js';
+import { initSessionToolbar } from './ui/session.controller.js';
 import { log } from './utils/logger.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -11,6 +13,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize UI handlers
     initUI();
+
+    // Initialize Character List
+    initCharacterList();
+
+    // Initialize Session Toolbar
+    initSessionToolbar();
 
     // Initialize Authentication
     initAuth();
@@ -21,3 +29,4 @@ document.addEventListener('DOMContentLoaded', () => {
         log('DevTools initialized.', 'success');
     });
 });
+

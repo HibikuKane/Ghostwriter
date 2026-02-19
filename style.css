@@ -21,8 +21,138 @@ body {
 
 #app {
     width: 100%;
-    max-width: 600px;
+    max-width: 960px;
     padding: 2rem;
+}
+
+/* Main Layout: Sidebar + Chat side-by-side */
+.layout-main {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+/* Character Sidebar */
+.sidebar {
+    width: 220px;
+    min-width: 220px;
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #444;
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-muted);
+}
+
+.sidebar-header .btn.text {
+    font-size: 1.2rem;
+    padding: 0.2rem 0.5rem;
+    line-height: 1;
+}
+
+#character-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.character-item {
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.character-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.character-item .character-actions {
+    display: none;
+    gap: 0.25rem;
+    margin-top: 0.25rem;
+}
+
+.character-item:hover .character-actions {
+    display: flex;
+}
+
+.character-actions button {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 0.1rem 0.3rem;
+    border-radius: 4px;
+}
+
+.character-actions button:hover {
+    color: var(--text-main);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.character-item.active {
+    background-color: var(--accent);
+}
+
+.character-item.active .character-name {
+    color: white;
+}
+
+.character-item.active .character-desc {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.character-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-main);
+}
+
+.character-desc {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Chat section fills remaining space */
+.layout-main #chat-section {
+    flex: 1;
+    margin-top: 0;
+}
+
+/* Responsive: stack on small screens */
+@media (max-width: 700px) {
+    .layout-main {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        min-width: unset;
+    }
 }
 
 header {
@@ -125,6 +255,24 @@ h1 {
 
 .log-line.info {
     color: var(--accent);
+}
+
+/* Session Toolbar */
+#session-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+#session-select {
+    flex: 1;
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background-color: #333;
+    color: white;
+    font-size: 0.85rem;
 }
 
 /* Chat UI */
@@ -252,7 +400,8 @@ h1 {
 }
 
 .form-group input,
-.form-group select {
+.form-group select,
+.form-group textarea {
     width: 100%;
     padding: 0.8rem;
     border-radius: 6px;
@@ -260,6 +409,13 @@ h1 {
     background-color: #333;
     color: white;
     box-sizing: border-box;
+    font-family: inherit;
+    font-size: 0.9rem;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
 }
 
 .modal-actions {
@@ -275,6 +431,15 @@ h1 {
 
 .btn.secondary:hover {
     background-color: #555;
+}
+
+.btn.danger-btn {
+    background-color: var(--danger);
+    color: white;
+}
+
+.btn.danger-btn:hover {
+    background-color: #d32f2f;
 }
 
 /* Loading Screen */

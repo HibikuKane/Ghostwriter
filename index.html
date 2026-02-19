@@ -42,21 +42,65 @@
                     </div>
                 </div>
 
-                <!-- Chat Section (Hidden by default) -->
-                <div id="chat-section" class="card hidden">
-                    <div id="chat-history" class="chat-history">
-                        <!-- Messages will appear here -->
-                        <div class="message assistant">
-                            <div class="bubble">Hello! I am Ghostwriter. How can I help you write today?</div>
+                <!-- Main Layout: Sidebar + Chat -->
+                <div id="layout-main" class="layout-main hidden">
+                    <!-- Character List Sidebar -->
+                    <aside id="character-list-sidebar" class="sidebar">
+                        <div class="sidebar-header">
+                            <h3>캐릭터</h3>
+                            <button id="add-character-btn" class="btn text" title="새 캐릭터 추가">＋</button>
                         </div>
-                    </div>
-                    <div class="chat-input-area">
-                        <input type="text" id="chat-input" placeholder="Type your message..." autocomplete="off">
-                        <button id="send-btn" class="btn primary">Send</button>
+                        <ul id="character-list">
+                            <!-- Rendered dynamically by character.controller.js -->
+                        </ul>
+                    </aside>
+
+                    <!-- Chat Section -->
+                    <div id="chat-section" class="card">
+                        <div id="session-toolbar">
+                            <select id="session-select">
+                                <option value="">새 세션</option>
+                            </select>
+                            <button id="new-session-btn" class="btn text">🆕 새 대화</button>
+                        </div>
+                        <div id="chat-history" class="chat-history">
+                            <!-- Messages will appear here -->
+                            <div class="message assistant">
+                                <div class="bubble">Hello! I am Ghostwriter. How can I help you write today?</div>
+                            </div>
+                        </div>
+                        <div class="chat-input-area">
+                            <input type="text" id="chat-input" placeholder="Type your message..." autocomplete="off">
+                            <button id="send-btn" class="btn primary">Send</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </main>
+
+        <!-- Character Create/Edit Modal -->
+        <div id="character-modal" class="modal hidden">
+            <div class="modal-content">
+                <span id="close-character-modal" class="close">&times;</span>
+                <h2 id="character-modal-title">캐릭터 생성</h2>
+                <div class="form-group">
+                    <label for="char-name">이름</label>
+                    <input type="text" id="char-name" placeholder="캐릭터 이름">
+                </div>
+                <div class="form-group">
+                    <label for="char-description">설명</label>
+                    <input type="text" id="char-description" placeholder="간단한 설명">
+                </div>
+                <div class="form-group">
+                    <label for="char-system-prompt">시스템 프롬프트</label>
+                    <textarea id="char-system-prompt" placeholder="이 캐릭터의 성격과 역할을 설명하세요" rows="5"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button id="delete-character-btn" class="btn danger-btn hidden">삭제</button>
+                    <button id="save-character-btn" class="btn primary">저장</button>
+                </div>
+            </div>
+        </div>
 
         <!-- First-Time API Key Setup Modal -->
         <div id="first-setup-modal" class="modal hidden">

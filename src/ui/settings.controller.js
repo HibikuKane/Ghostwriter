@@ -7,8 +7,9 @@ import { log } from '../utils/logger.js';
 import { characterService } from '../persona/character.service.js';
 import { readStatusFile, updateSettings } from '../drive/drive.service.js';
 import { STORAGE_KEYS } from '../config.js';
-import { showChat } from './chat.controller.js';
+import { showChat, clearChat } from './chat.controller.js';
 import { hideLoadingScreen, showSettingsButton } from './ui.controller.js';
+import { renderCharacterList } from './character.controller.js';
 
 // DOM Elements - Main Settings Modal
 const settingsToggle = document.getElementById('settings-toggle');
@@ -122,6 +123,13 @@ export async function loadSettingsFromDrive() {
                 }
 
                 log('Settings loaded from Google Drive', 'success');
+
+                // Load characters from Drive and re-render sidebar
+                await characterService.loadCharactersFromDrive();
+                renderCharacterList();
+
+                // Refresh greeting to match active character
+                clearChat();
 
                 // Hide loading screen and show chat
                 hideLoadingScreen();
