@@ -13,9 +13,6 @@ const chatHistory = document.getElementById('chat-history');
 const chatInput = document.getElementById('chat-input');
 const sendBtn = document.getElementById('send-btn');
 
-
-
-
 let currentSessionId = null;
 let messageHistory = [];
 
@@ -37,10 +34,67 @@ export function initChat() {
 }
 
 /**
- * Show the chat interface
+ * Show the chat interface (and its parent layout)
  */
 export function showChat() {
+    const layoutMain = document.getElementById('layout-main');
+    if (layoutMain) layoutMain.classList.remove('hidden');
     if (chatSection) chatSection.classList.remove('hidden');
+}
+
+/**
+ * Get the current session ID.
+ * @returns {string|null}
+ */
+export function getCurrentSessionId() {
+    return currentSessionId;
+}
+
+/**
+ * Set the current session ID.
+ * @param {string} id
+ */
+export function setCurrentSessionId(id) {
+    currentSessionId = id;
+}
+
+/**
+ * Load a session's messages into the chat UI.
+ * Replaces current message history and re-renders all messages.
+ * @param {Array} messages - Array of { role, content } objects
+ * @param {string} sessionId - The session ID to set as current
+ */
+export function loadSessionMessages(messages, sessionId) {
+    messageHistory = messages || [];
+    currentSessionId = sessionId;
+
+    // Clear and re-render chat history
+    if (chatHistory) {
+        chatHistory.innerHTML = '';
+        messageHistory.forEach(msg => {
+            addMessageToUI(msg.role, msg.content);
+        });
+    }
+
+    log(`Chat loaded: ${messageHistory.length} messages`, 'info');
+}
+
+/**
+ * Clear the chat and start a fresh session.
+ */
+export function clearChat() {
+    messageHistory = [];
+    currentSessionId = `chat_${new Date().toISOString().replace(/[:.]/g, '-')}`;
+
+    if (chatHistory) {
+        chatHistory.innerHTML = '';
+        // Show default greeting
+        const character = characterService.activeCharacter;
+        const greeting = `Hello! I am ${character.name}. How can I help you today?`;
+        addMessageToUI('assistant', greeting);
+    }
+
+    log('Chat cleared, new session started', 'info');
 }
 
 /**
@@ -49,6 +103,8 @@ export function showChat() {
 async function sendMessage() {
     const text = chatInput.value.trim();
     if (!text) return;
+
+    const activeCharacterId = characterService.activeCharacterId;
 
     // 1. Add User Message
     addMessageToUI('user', text);
@@ -63,8 +119,8 @@ async function sendMessage() {
     messageHistory.push({ role: 'user', content: text });
     chatInput.value = '';
 
-    // Auto-save user message
-    const savedId = await chatRepository.saveSession(currentSessionId, messageHistory);
+    // Auto-save user message (with characterId)
+    const savedId = await chatRepository.saveSession(currentSessionId, messageHistory, activeCharacterId);
     if (savedId) currentSessionId = savedId;
 
     // 2. Loading State
@@ -79,9 +135,9 @@ async function sendMessage() {
         addMessageToUI('assistant', responseText);
         messageHistory.push({ role: 'assistant', content: responseText });
 
-        // Auto-save assistant message
-        const savedId = await chatRepository.saveSession(currentSessionId, messageHistory);
-        if (savedId) currentSessionId = savedId;
+        // Auto-save assistant message (with characterId)
+        const savedId2 = await chatRepository.saveSession(currentSessionId, messageHistory, activeCharacterId);
+        if (savedId2) currentSessionId = savedId2;
 
     } catch (err) {
         removeMessage(loadingId);
