@@ -6,6 +6,7 @@ import { llmService } from '../llm/llm.service.js';
 import { log } from '../utils/logger.js';
 import { chatRepository } from '../memory/chat.repository.js';
 import { characterService } from '../persona/character.service.js';
+import { personaService } from '../persona/persona.service.js';
 
 // DOM Elements
 const chatSection = document.getElementById('chat-section');
@@ -109,9 +110,11 @@ async function sendMessage() {
     // 1. Add User Message
     addMessageToUI('user', text);
 
-    // Construct full history with system prompt
+    // Construct full history with system prompt + persona
+    const personaPrompt = personaService.getPersonaPrompt();
     const fullHistory = [
         characterService.getSystemMessage(),
+        ...(personaPrompt ? [{ role: 'system', content: personaPrompt }] : []),
         ...messageHistory,
         { role: 'user', content: text }
     ];

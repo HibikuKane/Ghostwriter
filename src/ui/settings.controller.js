@@ -5,11 +5,13 @@
 import { llmService } from '../llm/llm.service.js';
 import { log } from '../utils/logger.js';
 import { characterService } from '../persona/character.service.js';
+import { personaService } from '../persona/persona.service.js';
 import { readStatusFile, updateSettings } from '../drive/drive.service.js';
 import { STORAGE_KEYS } from '../config.js';
 import { showChat, clearChat } from './chat.controller.js';
 import { hideLoadingScreen, showSettingsButton } from './ui.controller.js';
 import { renderCharacterList } from './character.controller.js';
+import { renderPersonaDropdown } from './persona.controller.js';
 
 // DOM Elements - Main Settings Modal
 const settingsToggle = document.getElementById('settings-toggle');
@@ -128,6 +130,14 @@ export async function loadSettingsFromDrive() {
                 await characterService.loadCharactersFromDrive();
                 renderCharacterList();
 
+                // Load personas from Drive and render dropdown
+                await personaService.loadPersonasFromDrive();
+                if (settings.persona) {
+                    personaService.setActivePersona(settings.persona);
+                    localStorage.setItem(STORAGE_KEYS.PERSONA, settings.persona);
+                }
+                renderPersonaDropdown();
+
                 // Refresh greeting to match active character
                 clearChat();
 
@@ -232,11 +242,13 @@ async function saveSettings() {
 
     try {
         // Prepare settings object
+        const personaId = personaService.activePersonaId;
         const settings = {
             apiKey: key,
             provider: provider,
             model: model,
-            character: characterId
+            character: characterId,
+            persona: personaId
         };
 
         // Save to Google Drive
@@ -246,6 +258,7 @@ async function saveSettings() {
         localStorage.setItem(STORAGE_KEYS.PROVIDER, provider);
         localStorage.setItem(STORAGE_KEYS.MODEL, model);
         localStorage.setItem(STORAGE_KEYS.CHARACTER, characterId);
+        localStorage.setItem(STORAGE_KEYS.PERSONA, personaId);
 
         // Initialize service
         llmService.setProvider(provider, key, model);

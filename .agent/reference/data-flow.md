@@ -2,7 +2,7 @@
 
 > **목적**: Ghostwriter의 데이터가 어떻게 흐르고 저장되는지 설명합니다.
 
-**마지막 업데이트**: 2026-02-19
+**마지막 업데이트**: 2026-02-21
 
 ---
 
@@ -45,6 +45,7 @@ Google Drive/
     "provider": "gemini",
     "model": "gemini-2.0-flash-exp",
     "character": "character_file_id",
+    "persona": "default",
     "lastModified": "2026-02-15T16:00:00.000Z"
   }
 }
@@ -56,6 +57,7 @@ Google Drive/
 | `settings.provider` | string | LLM 제공자 (`"gemini"`, `"openai"` 등) |
 | `settings.model` | string | 사용 중인 모델 |
 | `settings.character` | string | 현재 선택된 캐릭터의 Drive 파일 ID |
+| `settings.persona` | string | 현재 선택된 페르소나 ID (UUID 또는 `"default"`) |
 
 ---
 
@@ -71,6 +73,27 @@ Google Drive/
   "updatedAt": "2026-02-15T16:00:00.000Z"
 }
 ```
+
+---
+
+## 👤 Persona 파일 구조
+
+```json
+{
+  "id": "uuid",
+  "name": "페르소나 이름",
+  "description": "성격, 배경, 말투 등 (LLM에 전달됨)",
+  "note": "UI 전용 메모 (LLM 미전달)",
+  "createdAt": "2026-02-21T00:00:00.000Z",
+  "updatedAt": "2026-02-21T00:00:00.000Z"
+}
+```
+
+| 필드 | LLM 전달 | 설명 |
+|------|----------|------|
+| `name` | ✅ | 프롬프트에 `[User Persona: name]`으로 포함 |
+| `description` | ✅ | 자유 텍스트 설정 |
+| `note` | ❌ | 용도/목적 메모 (사용자만 봄) |
 
 ---
 

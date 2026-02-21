@@ -24,5 +24,6 @@ export function getClientId() {
 export const STORAGE_KEYS = {
     PROVIDER: 'ghostwriter_provider',
     MODEL: 'ghostwriter_model',
-    CHARACTER: 'ghostwriter_character'
+    CHARACTER: 'ghostwriter_character',
+    PERSONA: 'ghostwriter_persona'
 };
