@@ -147,14 +147,37 @@
                         <label for="provider-select">LLM Provider</label>
                         <select id="provider-select">
                             <option value="gemini">Google Gemini</option>
-                            <!-- Future: OpenAI, Claude, etc -->
+                            <option value="openai">OpenAI</option>
+                            <option value="claude">Anthropic Claude</option>
+                            <option value="custom">커스텀 (Custom)</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label for="api-key-input">API Key</label>
                         <input type="password" id="api-key-input" placeholder="Enter your API Key">
-                        <small>Stored in Google Drive. Syncs across all your devices.</small>
+                        <small id="api-key-hint">Stored in Google Drive. Syncs across all your devices.</small>
+                    </div>
+
+                    <!-- Custom Provider Fields (hidden by default) -->
+                    <div id="custom-provider-fields" class="hidden">
+                        <div class="form-divider"></div>
+                        <div class="form-group">
+                            <label for="custom-url">Endpoint URL</label>
+                            <input type="text" id="custom-url" placeholder="https://api.example.com/v1">
+                        </div>
+                        <div class="form-group">
+                            <label for="custom-format">API 포맷</label>
+                            <select id="custom-format">
+                                <option value="openai">OpenAI 호환</option>
+                                <option value="anthropic">Anthropic</option>
+                                <option value="gemini">Gemini</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="custom-model">모델명</label>
+                            <input type="text" id="custom-model" placeholder="my-model-name">
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -167,12 +190,6 @@
                         <small style="display:block; margin-top:5px;">Enter API Key to fetch available models.</small>
                     </div>
 
-                    <div class="form-group">
-                        <label for="character-select">Character Persona</label>
-                        <select id="character-select">
-                            <option value="ghostwriter">Ghostwriter (Default)</option>
-                        </select>
-                    </div>
 
                     <div class="modal-actions">
                         <button id="test-connection-btn" class="btn secondary">Test Connection</button>
@@ -198,7 +215,8 @@
                         </div>
                         <div class="form-group">
                             <label for="persona-description">설명 <small class="label-hint">(LLM에 전달됨)</small></label>
-                            <textarea id="persona-description" placeholder="이 페르소나의 성격, 배경, 말투 등을 자유롭게 작성하세요" rows="5"></textarea>
+                            <textarea id="persona-description" placeholder="이 페르소나의 성격, 배경, 말투 등을 자유롭게 작성하세요"
+                                rows="5"></textarea>
                         </div>
                         <div class="form-group">
                             <label for="persona-note">메모 <small class="label-hint">(UI 전용, LLM 미전달)</small></label>

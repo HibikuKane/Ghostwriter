@@ -481,6 +481,12 @@ h1 {
     cursor: not-allowed;
 }
 
+.form-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0.75rem 0;
+}
+
 .persona-notice {
     background-color: rgba(100, 108, 255, 0.1);
     border: 1px solid var(--accent);

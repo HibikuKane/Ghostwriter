@@ -3,6 +3,8 @@
  * Singleton service to manage the active LLM provider.
  */
 import { GeminiProvider } from './providers/gemini.provider.js';
+import { OpenAIProvider } from './providers/openai.provider.js';
+import { ClaudeProvider } from './providers/claude.provider.js';
 import { log } from '../utils/logger.js';
 
 class LLMService {
@@ -12,17 +14,53 @@ class LLMService {
 
     /**
      * Initialize the provider with configuration
-     * @param {string} providerName - 'gemini'
+     * @param {string} providerName - 'gemini' | 'openai' | 'claude' | 'custom'
      * @param {string} apiKey 
      * @param {string} model 
+     * @param {Object} [options] - Additional options (e.g. { baseUrl, format })
      */
-    setProvider(providerName, apiKey, model) {
-        if (providerName === 'gemini') {
-            this.provider = new GeminiProvider(apiKey, model);
-            log(`LLM Provider set to ${providerName}`, 'info');
-        } else {
-            log(`Unknown provider: ${providerName}`, 'error');
+    setProvider(providerName, apiKey, model, options = {}) {
+        switch (providerName) {
+            case 'gemini':
+                this.provider = new GeminiProvider(apiKey, model);
+                break;
+            case 'openai':
+                this.provider = new OpenAIProvider(apiKey, model);
+                break;
+            case 'claude':
+                this.provider = new ClaudeProvider(apiKey, model);
+                break;
+            case 'custom': {
+                const { baseUrl, format } = options;
+                if (!baseUrl) {
+                    log('Custom provider requires a base URL', 'error');
+                    return;
+                }
+                // Reuse existing provider classes based on format
+                switch (format) {
+                    case 'anthropic':
+                        this.provider = new ClaudeProvider(apiKey, model, baseUrl);
+                        this.provider.name = 'Custom (Anthropic)';
+                        break;
+                    case 'gemini':
+                        this.provider = new GeminiProvider(apiKey, model);
+                        // Gemini provider uses constructed URLs, override baseUrl
+                        this.provider.baseUrl = baseUrl;
+                        this.provider.name = 'Custom (Gemini)';
+                        break;
+                    case 'openai':
+                    default:
+                        this.provider = new OpenAIProvider(apiKey, model, baseUrl);
+                        this.provider.name = 'Custom (OpenAI)';
+                        break;
+                }
+                break;
+            }
+            default:
+                log(`Unknown provider: ${providerName}`, 'error');
+                return;
         }
+        log(`LLM Provider set to: ${this.provider.name} (model: ${model})`, 'info');
     }
 
     /**

@@ -39,13 +39,21 @@ Google 계정으로 로그인하면 바로 사용할 수 있습니다. 별도 �
 | 기능 | 상태 |
 |------|------|
 | Google 인증 (OAuth 2.0) | ✅ |
-| LLM 통합 (Google Gemini) | ✅ |
+| LLM 통합 (다중 프로바이더) | ✅ |
 | 캐릭터 관리 (CRUD + Drive 연동) | ✅ |
 | 세션 관리 (저장/불러오기/전환) | ✅ |
 | 설정 관리 (Drive 저장/로드) | ✅ |
-| 다중 LLM 프로바이더 | 🔜 |
-| 페르소나 관리 | 🔜 |
+| 유저 페르소나 관리 | ✅ |
 | 고급 대화 모드 (롤플레이/소설) | 🔜 |
+
+### 지원 LLM 프로바이더
+
+| 프로바이더 | 설명 |
+|------|------|
+| Google Gemini | Gemini 1.5 Flash/Pro 등 |
+| OpenAI | GPT-4o, GPT-4o-mini 등 (호환 API 포함) |
+| Anthropic Claude | Claude Sonnet/Haiku/Opus |
+| 커스텀 | 자체 URL + 모델명 지정 (로컬 모델, 호환 API 등) |
 
 ---
 
@@ -56,7 +64,7 @@ Google 계정으로 로그인하면 바로 사용할 수 있습니다. 별도 �
 | Frontend | Vanilla JS (ES6+) |
 | Styling | Vanilla CSS |
 | Storage | Google Drive API |
-| LLM | Google Gemini (+ 향후 확장) |
+| LLM | Gemini, OpenAI, Claude, Custom |
 | Auth | Google OAuth 2.0 |
 | Hosting | GitHub Pages |
 
@@ -71,9 +79,10 @@ Ghostwriter/
 ├── src/                    # 소스 코드
 │   ├── auth/               # 인증
 │   ├── drive/              # Google Drive API
-│   ├── llm/                # LLM 통합
+│   ├── llm/                # LLM 통합 (다중 프로바이더)
+│   │   └── providers/      # Gemini, OpenAI, Claude, Custom
 │   ├── memory/             # 스토리지 관리
-│   ├── persona/            # 캐릭터 관리
+│   ├── persona/            # 유저 페르소나 관리
 │   ├── ui/                 # UI 컨트롤러
 │   └── utils/              # 유틸리티
 ├── .agent/                 # AI 개발 가이드 (개발자용)
