@@ -19,11 +19,17 @@ const settingsModal = document.getElementById('settings-modal');
 const closeSettingsBtn = document.getElementById('close-settings-btn');
 const saveSettingsBtn = document.getElementById('save-settings-btn');
 const apiKeyInput = document.getElementById('api-key-input');
+const apiKeyHint = document.getElementById('api-key-hint');
 const providerSelect = document.getElementById('provider-select');
 const modelSelect = document.getElementById('model-select');
-const characterSelect = document.getElementById('character-select');
 const refreshModelsBtn = document.getElementById('refresh-models-btn');
 const testConnectionBtn = document.getElementById('test-connection-btn');
+
+// DOM Elements - Custom Provider
+const customProviderFields = document.getElementById('custom-provider-fields');
+const customUrlInput = document.getElementById('custom-url');
+const customFormatSelect = document.getElementById('custom-format');
+const customModelInput = document.getElementById('custom-model');
 
 // DOM Elements - First-Time Setup Modal
 const firstSetupModal = document.getElementById('first-setup-modal');
@@ -37,18 +43,8 @@ export async function initSettings() {
     const savedModel = localStorage.getItem(STORAGE_KEYS.MODEL);
     const savedCharacter = localStorage.getItem(STORAGE_KEYS.CHARACTER) || 'ghostwriter';
 
-    // Init Character Select
-    if (characterSelect) {
-        characterSelect.innerHTML = '';
-        characterService.characters.forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.id;
-            opt.text = c.name;
-            characterSelect.add(opt);
-        });
-        characterSelect.value = savedCharacter;
-        characterService.setActiveCharacter(savedCharacter);
-    }
+    // Init active character from localStorage
+    characterService.setActiveCharacter(savedCharacter);
 
     providerSelect.value = savedProvider;
 
@@ -58,6 +54,13 @@ export async function initSettings() {
     if (saveSettingsBtn) saveSettingsBtn.onclick = saveSettings;
     if (testConnectionBtn) testConnectionBtn.onclick = testConnection;
     if (refreshModelsBtn) refreshModelsBtn.onclick = () => refreshModels(apiKeyInput.value, modelSelect.value);
+
+    // Provider change handler
+    if (providerSelect) {
+        providerSelect.addEventListener('change', () => onProviderChange(providerSelect.value));
+        // Initialize UI state for current provider
+        onProviderChange(savedProvider);
+    }
 
     // Event Listeners - First-Time Setup
     if (firstSaveBtn) firstSaveBtn.onclick = saveFirstTimeSettings;
@@ -95,12 +98,29 @@ export async function loadSettingsFromDrive() {
                 if (settings.character) localStorage.setItem(STORAGE_KEYS.CHARACTER, settings.character);
 
                 // Update UI
-                // Update UI
                 if (settings.provider) providerSelect.value = settings.provider;
                 if (settings.character) {
-                    characterSelect.value = settings.character;
                     characterService.setActiveCharacter(settings.character);
                 }
+
+                // Restore custom provider fields if applicable
+                if (settings.provider === 'custom') {
+                    if (customUrlInput && settings.customUrl) customUrlInput.value = settings.customUrl;
+                    if (customFormatSelect && settings.customFormat) customFormatSelect.value = settings.customFormat;
+                    if (customModelInput && settings.customModel) customModelInput.value = settings.customModel;
+                    // Also restore from localStorage as fallback
+                } else {
+                    // Restore custom fields from localStorage (in case Drive doesn't have them yet)
+                    const savedCustomUrl = localStorage.getItem('gw_custom_url');
+                    const savedCustomFormat = localStorage.getItem('gw_custom_format');
+                    const savedCustomModel = localStorage.getItem('gw_custom_model');
+                    if (customUrlInput && savedCustomUrl) customUrlInput.value = savedCustomUrl;
+                    if (customFormatSelect && savedCustomFormat) customFormatSelect.value = savedCustomFormat;
+                    if (customModelInput && savedCustomModel) customModelInput.value = savedCustomModel;
+                }
+
+                // Toggle custom fields UI
+                onProviderChange(settings.provider || 'gemini');
 
                 // Determine effective settings (Drive > Local > Default)
                 const effectiveProvider = settings.provider || localStorage.getItem(STORAGE_KEYS.PROVIDER) || 'gemini';
@@ -108,19 +128,24 @@ export async function loadSettingsFromDrive() {
                 const effectiveKey = settings.apiKey;
 
                 // Initialize service
-                llmService.setProvider(
-                    effectiveProvider,
-                    effectiveKey,
-                    effectiveModel
-                );
+                if (effectiveProvider === 'custom') {
+                    const customUrl = settings.customUrl || localStorage.getItem('gw_custom_url') || '';
+                    const customFormat = settings.customFormat || localStorage.getItem('gw_custom_format') || 'openai';
+                    llmService.setProvider('custom', effectiveKey, effectiveModel, {
+                        baseUrl: customUrl,
+                        format: customFormat
+                    });
+                } else {
+                    llmService.setProvider(effectiveProvider, effectiveKey, effectiveModel);
+                }
 
                 // Update Model Select UI to reflect effective model
                 if (modelSelect.options.length > 0) {
                     modelSelect.value = effectiveModel;
                 }
 
-                // Try to fetch models
-                if (effectiveProvider === 'gemini') {
+                // Try to fetch models (skip for custom)
+                if (effectiveProvider !== 'custom') {
                     refreshModels(effectiveKey, effectiveModel);
                 }
 
@@ -172,12 +197,20 @@ async function refreshModels(apiKey, currentModel) {
         return;
     }
 
+    const provider = providerSelect.value;
+
+    // Custom provider doesn't support refresh
+    if (provider === 'custom') {
+        log('Custom provider: use the model name field instead', 'info');
+        return;
+    }
+
     try {
         refreshModelsBtn.disabled = true;
         refreshModelsBtn.innerText = 'Refreshing...';
         modelSelect.disabled = true;
 
-        llmService.setProvider('gemini', apiKey, currentModel);
+        llmService.setProvider(provider, apiKey, currentModel);
 
         const models = await llmService.listModels();
 
@@ -196,20 +229,16 @@ async function refreshModels(apiKey, currentModel) {
                 modelSelect.add(opt);
             });
 
-            // Re-select current model if available, or default
-            // Re-select current model if available, or default
-            if (currentModel && (models.find(m => m.id === currentModel) || true)) {
-                // We allow selecting the currentModel even if not in the list (e.g. preview models or custom fine-tuned)
+            // Re-select current model if available
+            if (currentModel && models.find(m => m.id === currentModel)) {
                 modelSelect.value = currentModel;
-
-                // Ensure the service is using this model (in case setProvider above didn't catch it or logic changed)
-                llmService.setProvider('gemini', apiKey, currentModel);
             } else {
-                // Prefer flash or pro if available
+                // Pick first model as default
                 const preferred = models.find(m => m.id.includes('flash')) || models[0];
                 modelSelect.value = preferred.id;
-                llmService.setProvider('gemini', apiKey, preferred.id);
             }
+
+            llmService.setProvider(provider, apiKey, modelSelect.value);
         }
 
     } catch (err) {
@@ -218,6 +247,26 @@ async function refreshModels(apiKey, currentModel) {
         refreshModelsBtn.disabled = false;
         refreshModelsBtn.innerText = '🔄 Refresh Models';
         modelSelect.disabled = false;
+    }
+}
+
+/**
+ * Handle provider dropdown change — toggle custom fields, update hints
+ */
+function onProviderChange(provider) {
+    const isCustom = provider === 'custom';
+
+    // Toggle custom fields visibility
+    if (customProviderFields) {
+        customProviderFields.classList.toggle('hidden', !isCustom);
+    }
+
+    // Toggle model select & refresh for custom (user types model name instead)
+    if (isCustom) {
+        modelSelect.closest('.form-group').classList.add('hidden');
+        refreshModelsBtn.closest('.form-group')?.classList.add('hidden');
+    } else {
+        modelSelect.closest('.form-group').classList.remove('hidden');
     }
 }
 
@@ -232,8 +281,7 @@ function closeSettings() {
 async function saveSettings() {
     const key = apiKeyInput.value.trim();
     const provider = providerSelect.value;
-    const model = modelSelect.value;
-    const characterId = characterSelect.value;
+    const characterId = characterService.activeCharacterId || localStorage.getItem(STORAGE_KEYS.CHARACTER) || 'ghostwriter';
 
     if (!key) {
         alert('Please enter an API Key.');
@@ -246,25 +294,59 @@ async function saveSettings() {
         const settings = {
             apiKey: key,
             provider: provider,
-            model: model,
             character: characterId,
             persona: personaId
         };
+
+        if (provider === 'custom') {
+            // Custom provider settings
+            const customUrl = customUrlInput?.value.trim();
+            const customFormat = customFormatSelect?.value || 'openai';
+            const customModel = customModelInput?.value.trim();
+
+            if (!customUrl) {
+                alert('커스텀 프로바이더에는 URL이 필요합니다.');
+                return;
+            }
+            if (!customModel) {
+                alert('커스텀 프로바이더에는 모델명이 필요합니다.');
+                return;
+            }
+
+            settings.model = customModel;
+            settings.customUrl = customUrl;
+            settings.customFormat = customFormat;
+            settings.customModel = customModel;
+
+            llmService.setProvider('custom', key, customModel, {
+                baseUrl: customUrl,
+                format: customFormat
+            });
+        } else {
+            const model = modelSelect.value;
+            settings.model = model;
+            llmService.setProvider(provider, key, model);
+        }
 
         // Save to Google Drive
         await updateSettings(settings);
 
         // Also save to localStorage for quick access
         localStorage.setItem(STORAGE_KEYS.PROVIDER, provider);
-        localStorage.setItem(STORAGE_KEYS.MODEL, model);
+        localStorage.setItem(STORAGE_KEYS.MODEL, settings.model);
         localStorage.setItem(STORAGE_KEYS.CHARACTER, characterId);
         localStorage.setItem(STORAGE_KEYS.PERSONA, personaId);
 
-        // Initialize service
-        llmService.setProvider(provider, key, model);
-        characterService.setActiveCharacter(characterId);
+        // Save custom settings to localStorage
+        if (provider === 'custom') {
+            localStorage.setItem('gw_custom_url', settings.customUrl);
+            localStorage.setItem('gw_custom_format', settings.customFormat);
+            localStorage.setItem('gw_custom_model', settings.customModel);
+        }
 
-        log(`Settings saved to Google Drive. Character: ${characterId}`, 'success');
+
+
+        log(`Settings saved to Google Drive. Provider: ${provider}`, 'success');
         closeSettings();
     } catch (err) {
         log('Error saving settings: ' + err.message, 'error');

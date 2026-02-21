@@ -96,13 +96,15 @@ Ghostwriter/
 
 ### `src/llm/`
 
-**역할**: LLM 통합
+**역할**: LLM 통합 (다중 프로바이더)
 
 | 파일 | 역할 |
 |------|------|
-| `llm.service.js` | LLM 서비스 통합 관리 |
-| `providers/base-provider.js` | Provider 기본 클래스 |
+| `llm.service.js` | LLM 서비스 통합 관리 (프로바이더 전환, 이벤트) |
+| `providers/base-provider.js` | Provider 기본 클래스 (인터페이스 정의) |
 | `providers/gemini.provider.js` | Google Gemini 구현 |
+| `providers/openai.provider.js` | OpenAI Chat Completions 구현 (호환 API 지원) |
+| `providers/claude.provider.js` | Anthropic Claude Messages 구현 |
 
 ### `src/memory/`
 
