@@ -2,7 +2,7 @@
 
 > **목적**: Ghostwriter의 디렉토리 구조와 각 모듈의 역할을 설명합니다.
 
-**마지막 업데이트**: 2026-02-19
+**마지막 업데이트**: 2026-02-21
 
 ---
 
@@ -52,6 +52,7 @@ Ghostwriter/
 - UI 초기화
 - 캐릭터 리스트 초기화
 - 세션 툴바 초기화
+- 페르소나 UI 초기화
 - 인증 시스템 초기화  
 - DevTools 로드
 
@@ -114,11 +115,12 @@ Ghostwriter/
 
 ### `src/persona/`
 
-**역할**: 캐릭터 관리
+**역할**: 캐릭터 및 유저 페르소나 관리
 
 | 파일 | 역할 |
 |------|------|
 | `character.service.js` | 캐릭터 CRUD + Drive 연동, 샘플 캐릭터 보호 |
+| `persona.service.js` | 유저 페르소나 CRUD + Drive 연동, 기본 페르소나 보호 |
 
 ### `src/ui/`
 
@@ -127,10 +129,11 @@ Ghostwriter/
 | 파일 | 역할 |
 |------|------|
 | `ui.controller.js` | UI 상태 관리 (로그인/로그아웃 UI 전환) |
-| `chat.controller.js` | 채팅 UI 컨트롤 |
+| `chat.controller.js` | 채팅 UI 컨트롤, 페르소나 프롬프트 주입 |
 | `character.controller.js` | 캐릭터 사이드바 + CRUD 모달 |
+| `persona.controller.js` | 페르소나 탭 UI + CRUD + 자동 저장 |
 | `session.controller.js` | 세션 드롭다운 + 캐릭터별 세션 전환 |
-| `settings.controller.js` | 설정 모달 관리 |
+| `settings.controller.js` | 설정 모달 관리 (탭 방식: 설정/페르소나) |
 | `devtools.js` | 개발자 도구 |
 
 ### `src/utils/`
