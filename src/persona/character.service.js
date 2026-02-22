@@ -107,6 +107,10 @@ export class CharacterService {
      * @returns {boolean} Whether removal was successful
      */
     removeCharacter(id) {
+        if (isDefaultCharacter(id)) {
+            log('Cannot remove default character', 'error');
+            return false;
+        }
         const index = this.characters.findIndex(c => c.id === id);
         if (index === -1) {
             log(`Cannot remove: Character ID not found: ${id}`, 'error');

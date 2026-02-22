@@ -5,5 +5,8 @@ secrets.js
 .DS_Store
 Thumbs.db
 
+# npm packages
+node_modules/
+
 # Strategic planning (private until project differentiation)
 .ideas/
