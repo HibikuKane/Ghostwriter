@@ -97,6 +97,8 @@ Ghostwriter/
 - ✅ `drive.file` 스코프만 사용 (앱이 생성한 파일만 접근)
 - ✅ 서버를 거치지 않음
 
+📄 [개인정보처리방침 / Privacy Policy](https://hibikukane.github.io/Ghostwriter/privacy.html)
+
 ---
 
 ## 📄 라이선스
