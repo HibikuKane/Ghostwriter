@@ -19,7 +19,7 @@
 
 ## 🚀 사용하기
 
-👉 **[Ghostwriter 바로가기](#)** _(배포 준비 중)_
+👉 **[Ghostwriter 바로가기](https://hibikukane.github.io/Ghostwriter/)**
 
 Google 계정으로 로그인하면 바로 사용할 수 있습니다. 별도 설치 불필요.
 

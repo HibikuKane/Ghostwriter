@@ -7,15 +7,14 @@ export const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive
 export const FOLDER_NAME = 'Ghostwriter_Data';
 
 /**
- * Get the Google Client ID from the global scope (loaded via secrets.js)
- * @returns {string}
+ * Google OAuth Client ID
+ * NOTE: Client IDs are NOT secrets — they are public identifiers.
+ * Google restricts usage to Authorized JavaScript Origins only.
  */
+const GOOGLE_CLIENT_ID = '802635867565-52bbemk7gut7qhfrvql2to0valavulon.apps.googleusercontent.com';
+
 export function getClientId() {
-    if (!window.GOOGLE_CLIENT_ID) {
-        console.error('GOOGLE_CLIENT_ID not found. Make sure secrets.js is loaded.');
-        return '';
-    }
-    return window.GOOGLE_CLIENT_ID;
+    return GOOGLE_CLIENT_ID;
 }
 
 /**
