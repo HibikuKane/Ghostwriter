@@ -2,7 +2,7 @@
  * Gemini Provider
  * Implements Google Gemini API integration.
  */
-import { BaseProvider } from './base-provider.js';
+import { BaseProvider, classifyApiError } from './base-provider.js';
 import { log } from '../../utils/logger.js';
 
 export class GeminiProvider extends BaseProvider {
@@ -76,6 +76,10 @@ export class GeminiProvider extends BaseProvider {
                 body: JSON.stringify(body)
             });
 
+            if (!response.ok) {
+                throw classifyApiError(response);
+            }
+
             const data = await response.json();
 
             if (data.error) {
@@ -90,8 +94,9 @@ export class GeminiProvider extends BaseProvider {
             }
 
         } catch (err) {
-            log(`Gemini API Error: ${err.message}`, 'error');
-            throw err;
+            const classified = classifyApiError(null, err);
+            log(`${this.name} 오류: ${classified.message}`, 'error');
+            throw classified;
         }
     }
 

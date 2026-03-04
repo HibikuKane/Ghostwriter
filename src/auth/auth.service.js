@@ -2,7 +2,7 @@
  * Auth Service
  * Manages Google Identity Services (GIS) and GAPI authentication.
  */
-import { SCOPES, DISCOVERY_DOC, getClientId } from '../config.js';
+import { SCOPES, DISCOVERY_DOC, getClientId, STORAGE_KEYS } from '../config.js';
 import { log } from '../utils/logger.js';
 import { updateUIState } from '../ui/ui.controller.js';
 import { loadSettingsFromDrive } from '../ui/settings.controller.js';
@@ -96,7 +96,27 @@ export function signOut() {
     if (token !== null) {
         google.accounts.oauth2.revoke(token.access_token);
         gapi.client.setToken('');
+        clearLocalStorage();
         log('User signed out.', 'info');
         updateUIState(false);
     }
+}
+
+/**
+ * Clear Ghostwriter-related localStorage keys on sign out.
+ * API keys are stored only on Drive, but provider/model/character
+ * preferences are cleared to prevent leaking usage info on shared PCs.
+ */
+function clearLocalStorage() {
+    const keysToRemove = [
+        STORAGE_KEYS.PROVIDER,
+        STORAGE_KEYS.MODEL,
+        STORAGE_KEYS.CHARACTER,
+        STORAGE_KEYS.PERSONA,
+        'gw_custom_url',
+        'gw_custom_format',
+        'gw_custom_model',
+    ];
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    log('로컬 저장소 정리 완료.', 'info');
 }

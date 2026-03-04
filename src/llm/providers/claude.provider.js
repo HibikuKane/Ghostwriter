@@ -5,7 +5,7 @@
  * Note: Uses 'anthropic-dangerous-direct-browser-access' header
  * for browser-based CORS access (officially supported by Anthropic).
  */
-import { BaseProvider } from './base-provider.js';
+import { BaseProvider, classifyApiError } from './base-provider.js';
 import { log } from '../../utils/logger.js';
 
 const DEFAULT_BASE_URL = 'https://api.anthropic.com/v1';
@@ -73,6 +73,10 @@ export class ClaudeProvider extends BaseProvider {
                 body: JSON.stringify(body)
             });
 
+            if (!response.ok) {
+                throw classifyApiError(response);
+            }
+
             const data = await response.json();
 
             if (data.error) {
@@ -87,8 +91,9 @@ export class ClaudeProvider extends BaseProvider {
             }
 
         } catch (err) {
-            log(`Claude API Error: ${err.message}`, 'error');
-            throw err;
+            const classified = classifyApiError(null, err);
+            log(`${this.name} 오류: ${classified.message}`, 'error');
+            throw classified;
         }
     }
 

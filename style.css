@@ -730,6 +730,16 @@ h1 {
     white-space: pre-wrap;
     font-size: 0.75rem;
     color: #a0a0a0;
+    overflow-wrap: break-word;
+    word-break: break-all;
+    max-width: 100%;
+}
+
+.dt-payload pre {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-break: break-all;
+    margin: 0;
 }
 
 .dt-payload.hidden {

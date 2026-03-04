@@ -116,8 +116,9 @@ export class DevTools {
         div.innerHTML = `<span class="dt-time">[${entry.time}]</span> <span class="dt-msg">${entry.msg}</span>`;
         if (this.logList) {
             this.logList.appendChild(div);
-            // Auto scroll if near bottom
-            this.logList.scrollTop = this.logList.scrollHeight;
+            // Scroll container is .dt-content (parent), not .dt-log-list
+            const scrollContainer = this.logList.parentElement;
+            scrollContainer.scrollTop = scrollContainer.scrollHeight;
         }
     }
 
@@ -162,7 +163,8 @@ export class DevTools {
 
         if (this.llmList) {
             this.llmList.appendChild(div);
-            this.llmList.scrollTop = this.llmList.scrollHeight;
+            const scrollContainer = this.llmList.parentElement;
+            scrollContainer.scrollTop = scrollContainer.scrollHeight;
         }
     }
 }
