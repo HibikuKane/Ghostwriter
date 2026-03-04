@@ -5,7 +5,7 @@
  * 
  * baseUrl can be overridden for custom endpoints.
  */
-import { BaseProvider } from './base-provider.js';
+import { BaseProvider, classifyApiError } from './base-provider.js';
 import { log } from '../../utils/logger.js';
 
 const DEFAULT_BASE_URL = 'https://api.openai.com/v1';
@@ -77,6 +77,10 @@ export class OpenAIProvider extends BaseProvider {
                 })
             });
 
+            if (!response.ok) {
+                throw classifyApiError(response);
+            }
+
             const data = await response.json();
 
             if (data.error) {
@@ -90,8 +94,9 @@ export class OpenAIProvider extends BaseProvider {
             }
 
         } catch (err) {
-            log(`OpenAI API Error: ${err.message}`, 'error');
-            throw err;
+            const classified = classifyApiError(null, err);
+            log(`${this.name} 오류: ${classified.message}`, 'error');
+            throw classified;
         }
     }
 
