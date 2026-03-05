@@ -12,6 +12,7 @@ import { showChat, clearChat } from './chat.controller.js';
 import { hideLoadingScreen, showSettingsButton } from './ui.controller.js';
 import { renderCharacterList } from './character.controller.js';
 import { renderPersonaDropdown } from './persona.controller.js';
+import { showToast } from '../utils/toast.js';
 
 // DOM Elements - Main Settings Modal
 const settingsToggle = document.getElementById('settings-toggle');
@@ -193,7 +194,7 @@ export async function loadSettingsFromDrive() {
 
 async function refreshModels(apiKey, currentModel) {
     if (!apiKey) {
-        alert('Please enter an API Key first.');
+        showToast('API 키를 먼저 입력해주세요.', 'warning');
         return;
     }
 
@@ -284,7 +285,7 @@ async function saveSettings() {
     const characterId = characterService.activeCharacterId || localStorage.getItem(STORAGE_KEYS.CHARACTER) || 'ghostwriter';
 
     if (!key) {
-        alert('Please enter an API Key.');
+        showToast('API 키를 입력해주세요.', 'warning');
         return;
     }
 
@@ -305,11 +306,11 @@ async function saveSettings() {
             const customModel = customModelInput?.value.trim();
 
             if (!customUrl) {
-                alert('커스텀 프로바이더에는 URL이 필요합니다.');
+                showToast('커스텀 프로바이더에는 URL이 필요합니다.', 'warning');
                 return;
             }
             if (!customModel) {
-                alert('커스텀 프로바이더에는 모델명이 필요합니다.');
+                showToast('커스텀 프로바이더에는 모델명이 필요합니다.', 'warning');
                 return;
             }
 
@@ -350,7 +351,7 @@ async function saveSettings() {
         closeSettings();
     } catch (err) {
         log('Error saving settings: ' + err.message, 'error');
-        alert('Failed to save settings: ' + err.message);
+        showToast('설정 저장에 실패했습니다.', 'error');
     }
 }
 
@@ -360,7 +361,7 @@ async function testConnection() {
     const model = modelSelect.value;
 
     if (!key) {
-        alert('Please enter an API Key first.');
+        showToast('API 키를 먼저 입력해주세요.', 'warning');
         return;
     }
 
@@ -374,13 +375,13 @@ async function testConnection() {
 
         if (success) {
             log('Connection test successful!', 'success');
-            alert('Connection successful!');
+            showToast('연결에 성공했습니다!', 'success');
         } else {
             throw new Error('Test failed (no response)');
         }
     } catch (err) {
         log('Connection test failed: ' + err.message, 'error');
-        alert('Connection failed: ' + err.message);
+        showToast('연결 테스트 실패: ' + err.message, 'error');
     } finally {
         testConnectionBtn.disabled = false;
         testConnectionBtn.innerText = 'Test Connection';
@@ -413,7 +414,7 @@ async function saveFirstTimeSettings() {
     const provider = firstProviderSelect.value;
 
     if (!key) {
-        alert('API 키를 입력해주세요.');
+        showToast('API 키를 입력해주세요.', 'warning');
         return;
     }
 
@@ -455,7 +456,7 @@ async function saveFirstTimeSettings() {
         showChat();
     } catch (err) {
         log('Error saving initial settings: ' + err.message, 'error');
-        alert('설정 저장에 실패했습니다: ' + err.message);
+        showToast('설정 저장에 실패했습니다: ' + err.message, 'error');
     } finally {
         firstSaveBtn.disabled = false;
         firstSaveBtn.innerText = '저장하고 시작하기';

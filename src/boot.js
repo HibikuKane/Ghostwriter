@@ -7,6 +7,7 @@ import { initUI } from './ui/ui.controller.js';
 import { initCharacterList } from './ui/character.controller.js';
 import { initSessionToolbar } from './ui/session.controller.js';
 import { initPersonaUI } from './ui/persona.controller.js';
+import { initNetworkMonitor } from './utils/network.js';
 import { log } from './utils/logger.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -24,6 +25,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Initialize Persona UI
         initPersonaUI();
+
+        // Initialize Network Monitor
+        initNetworkMonitor();
 
         // Initialize Authentication
         initAuth();

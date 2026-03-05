@@ -13,6 +13,12 @@ let tokenClient;
 let gapiInited = false;
 let gisInited = false;
 
+// Token renewal tracking
+let tokenIssuedAt = null;
+const TOKEN_LIFETIME_MS = 50 * 60 * 1000; // 50 min (actual expiry 60 min, 10 min buffer)
+let pendingTokenResolve = null;
+let isRefreshingToken = false;
+
 /**
  * Initialize the Auth Service
  */
@@ -47,9 +53,29 @@ export function initAuth() {
             scope: SCOPES,
             callback: async (resp) => {
                 if (resp.error !== undefined) {
+                    // If there's a pending token refresh, reject it
+                    if (pendingTokenResolve) {
+                        pendingTokenResolve.reject(new Error('Token refresh failed: ' + resp.error));
+                        pendingTokenResolve = null;
+                        isRefreshingToken = false;
+                    }
                     throw (resp);
                 }
+
+                // Record token issue time
+                tokenIssuedAt = Date.now();
                 log('Token received. User authenticated.', 'success');
+
+                // If this was a token refresh (not initial login), just resolve
+                if (pendingTokenResolve) {
+                    log('토큰이 자동으로 갱신되었습니다.', 'info');
+                    pendingTokenResolve.resolve();
+                    pendingTokenResolve = null;
+                    isRefreshingToken = false;
+                    return;
+                }
+
+                // Initial login flow
                 updateUIState(true);
 
                 // Auto-initialize workspace
@@ -78,6 +104,56 @@ function checkInitComplete() {
 }
 
 /**
+ * Ensure the current token is valid.
+ * If the token has expired or is about to expire, automatically refresh it.
+ * @returns {Promise<void>} Resolves when a valid token is available
+ */
+export async function ensureValidToken() {
+    const token = gapi.client.getToken();
+    if (!token) {
+        throw new Error('인증되지 않은 상태입니다. 다시 로그인해주세요.');
+    }
+
+    // Check if token is still fresh
+    if (tokenIssuedAt && (Date.now() - tokenIssuedAt) < TOKEN_LIFETIME_MS) {
+        return; // Token is still valid
+    }
+
+    // Token needs refresh
+    if (isRefreshingToken) {
+        // Another refresh is already in progress, wait for it
+        return new Promise((resolve, reject) => {
+            const existingResolve = pendingTokenResolve;
+            pendingTokenResolve = {
+                resolve: () => {
+                    if (existingResolve) existingResolve.resolve();
+                    resolve();
+                },
+                reject: (err) => {
+                    if (existingResolve) existingResolve.reject(err);
+                    reject(err);
+                }
+            };
+        });
+    }
+
+    // Start token refresh
+    isRefreshingToken = true;
+    log('토큰 만료 감지 — 자동 갱신 중...', 'info');
+
+    return new Promise((resolve, reject) => {
+        pendingTokenResolve = { resolve, reject };
+        try {
+            tokenClient.requestAccessToken({ prompt: '' });
+        } catch (err) {
+            pendingTokenResolve = null;
+            isRefreshingToken = false;
+            reject(new Error('토큰 갱신에 실패했습니다: ' + err.message));
+        }
+    });
+}
+
+/**
  * Trigger Login Flow
  */
 export function signIn() {
@@ -96,6 +172,7 @@ export function signOut() {
     if (token !== null) {
         google.accounts.oauth2.revoke(token.access_token);
         gapi.client.setToken('');
+        tokenIssuedAt = null;
         clearLocalStorage();
         log('User signed out.', 'info');
         updateUIState(false);
@@ -120,3 +197,4 @@ function clearLocalStorage() {
     keysToRemove.forEach(key => localStorage.removeItem(key));
     log('로컬 저장소 정리 완료.', 'info');
 }
+
