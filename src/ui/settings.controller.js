@@ -351,7 +351,7 @@ async function saveSettings() {
         closeSettings();
     } catch (err) {
         log('Error saving settings: ' + err.message, 'error');
-        showToast('설정 저장에 실패했습니다.', 'error');
+        showToast('설정 저장에 실패했습니다: ' + err.message, 'error');
     }
 }
 

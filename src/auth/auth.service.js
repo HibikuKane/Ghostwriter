@@ -59,7 +59,8 @@ export function initAuth() {
                         pendingTokenResolve = null;
                         isRefreshingToken = false;
                     }
-                    throw (resp);
+                    log('Authentication error: ' + resp.error, 'error');
+                    return;
                 }
 
                 // Record token issue time
