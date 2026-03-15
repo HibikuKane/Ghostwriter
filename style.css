@@ -745,3 +745,106 @@ h1 {
 .dt-payload.hidden {
     display: none;
 }
+
+/* ========================================
+   Toast Notification System
+   ======================================== */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    pointer-events: none;
+    max-width: 90vw;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 10px;
+    background-color: #2d2d2d;
+    border: 1px solid #444;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.3s, transform 0.3s;
+    min-width: 250px;
+    max-width: 450px;
+}
+
+.toast-show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-hide {
+    animation: toastFadeOut 0.3s ease forwards;
+}
+
+@keyframes toastFadeOut {
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+.toast-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.toast-message {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.toast-error {
+    border-color: var(--danger);
+    background-color: rgba(244, 67, 54, 0.15);
+}
+
+.toast-success {
+    border-color: var(--success);
+    background-color: rgba(76, 175, 80, 0.15);
+}
+
+.toast-warning {
+    border-color: #ff9800;
+    background-color: rgba(255, 152, 0, 0.15);
+}
+
+.toast-info {
+    border-color: var(--accent);
+    background-color: rgba(100, 108, 255, 0.15);
+}
+
+/* ========================================
+   Offline Banner
+   ======================================== */
+.offline-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10001;
+    background-color: rgba(255, 152, 0, 0.95);
+    color: #1a1a1a;
+    text-align: center;
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: transform 0.3s ease;
+}
+
+.offline-banner.hidden {
+    transform: translateY(-100%);
+}

@@ -6,6 +6,7 @@
 import { characterService, isDefaultCharacter } from '../persona/character.service.js';
 import { log } from '../utils/logger.js';
 import { loadCharacterSession } from './session.controller.js';
+import { showToast } from '../utils/toast.js';
 
 // DOM Elements - Sidebar
 const characterList = document.getElementById('character-list');
@@ -224,7 +225,7 @@ async function saveCharacterFromModal() {
     const systemPrompt = charPromptInput.value.trim();
 
     if (!name) {
-        alert('캐릭터 이름을 입력해주세요.');
+        showToast('캐릭터 이름을 입력해주세요.', 'warning');
         return;
     }
 
@@ -255,7 +256,7 @@ async function saveCharacterFromModal() {
         closeModal();
     } catch (err) {
         log(`Error saving character: ${err.message}`, 'error');
-        alert('캐릭터 저장에 실패했습니다: ' + err.message);
+        showToast('캐릭터 저장에 실패했습니다: ' + err.message, 'error');
     } finally {
         saveCharacterBtn.disabled = false;
         saveCharacterBtn.textContent = '저장';
@@ -280,7 +281,7 @@ async function deleteCharacterFromModal() {
  */
 async function confirmDeleteCharacter(id, name) {
     if (characterService.characters.length <= 1) {
-        alert('최소 1개의 캐릭터가 필요합니다.');
+        showToast('최소 1개의 캐릭터가 필요합니다.', 'warning');
         return;
     }
 
@@ -297,6 +298,6 @@ async function confirmDeleteCharacter(id, name) {
         log(`✅ Character deleted: ${name}`, 'success');
     } catch (err) {
         log(`Error deleting character: ${err.message}`, 'error');
-        alert('캐릭터 삭제에 실패했습니다: ' + err.message);
+        showToast('캐릭터 삭제에 실패했습니다: ' + err.message, 'error');
     }
 }

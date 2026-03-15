@@ -4,6 +4,8 @@
  */
 import { FOLDER_NAME } from '../config.js';
 import { log } from '../utils/logger.js';
+import { ensureValidToken } from '../auth/auth.service.js';
+import { fetchWithTimeout } from '../utils/network.js';
 
 const FOLDER_MAP = {
     'persona': 'personas',
@@ -42,7 +44,7 @@ export class StorageManager {
             // 2. Find or Create Subfolders
             const folderNames = Object.values(FOLDER_MAP); // ['personas', 'characters', etc.]
 
-            // We can do this in parallel, but sequential is safer for now to avoid race conditions or rate limits
+            // Sequential to avoid race conditions or rate limits
             for (const name of folderNames) {
                 this.folders[name] = await this._findOrCreateFolder(name, this.rootFolderId);
                 log(`Folder mapped: ${name} -> ${this.folders[name]}`, 'info');
@@ -51,8 +53,12 @@ export class StorageManager {
             this.isInitialized = true;
             log('StorageManager initialized successfully.', 'success');
         } catch (err) {
+            // Reset initialization state so next call retries
+            // Keep any folders that were successfully mapped (idempotent)
+            this.isInitialized = false;
             log('Error initializing StorageManager: ' + err.message, 'error');
             console.error(err);
+            throw err;
         }
     }
 
@@ -149,6 +155,7 @@ export class StorageManager {
         if (!this.isInitialized) await this.init();
 
         try {
+            await ensureValidToken();
             const response = await gapi.client.drive.files.get({
                 fileId: fileId,
                 alt: 'media'
@@ -205,8 +212,9 @@ export class StorageManager {
             JSON.stringify(content, null, 2) +
             close_delim;
 
+        await ensureValidToken();
         const accessToken = gapi.client.getToken().access_token;
-        const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        const res = await fetchWithTimeout('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
             method: 'POST',
             headers: {
                 'Authorization': 'Bearer ' + accessToken,
@@ -228,8 +236,9 @@ export class StorageManager {
      * Internal: Update File
      */
     async _updateFile(fileId, content) {
+        await ensureValidToken();
         const accessToken = gapi.client.getToken().access_token;
-        const res = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+        const res = await fetchWithTimeout(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
             method: 'PATCH',
             headers: {
                 'Authorization': 'Bearer ' + accessToken,
