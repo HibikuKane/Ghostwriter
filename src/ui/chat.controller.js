@@ -7,6 +7,7 @@ import { log } from '../utils/logger.js';
 import { chatRepository } from '../memory/chat.repository.js';
 import { characterService } from '../persona/character.service.js';
 import { personaService } from '../persona/persona.service.js';
+import { showToast } from '../utils/toast.js';
 
 // DOM Elements
 const chatSection = document.getElementById('chat-section');
@@ -145,7 +146,7 @@ async function sendMessage() {
     } catch (err) {
         removeMessage(loadingId);
         log('Error generating response: ' + err.message, 'error');
-        addMessageToUI('system', 'Error: ' + err.message);
+        showToast('응답 생성에 실패했습니다: ' + err.message, 'error');
     }
 }
 

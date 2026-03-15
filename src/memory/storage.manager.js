@@ -155,6 +155,7 @@ export class StorageManager {
         if (!this.isInitialized) await this.init();
 
         try {
+            await ensureValidToken();
             const response = await gapi.client.drive.files.get({
                 fileId: fileId,
                 alt: 'media'
