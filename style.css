@@ -9,6 +9,10 @@
     --danger: #f44336;
 }
 
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: var(--bg-color);
@@ -17,6 +21,7 @@ body {
     display: flex;
     justify-content: center;
     min-height: 100vh;
+    overflow-x: hidden;
 }
 
 #app {
@@ -143,15 +148,189 @@ body {
     margin-top: 0;
 }
 
-/* Responsive: stack on small screens */
+/* ========================================
+   Responsive — Tablet (≤700px)
+   ======================================== */
 @media (max-width: 700px) {
+    #app {
+        padding: 1rem;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    header {
+        margin-bottom: 1.5rem;
+    }
+
     .layout-main {
         flex-direction: column;
     }
 
+    /* Sidebar: 가로 스크롤 스트립으로 전환 */
     .sidebar {
         width: 100%;
         min-width: unset;
+        padding: 0.6rem 0.75rem;
+    }
+
+    .sidebar-header {
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.4rem;
+    }
+
+    #character-list {
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 0.4rem;
+        padding-bottom: 0.3rem;
+    }
+
+    .character-item {
+        flex-shrink: 0;
+        min-width: 100px;
+        max-width: 140px;
+    }
+
+    /* 호버 시 나타나는 액션 버튼은 모바일에서 항상 표시 */
+    .character-item .character-actions {
+        display: flex;
+    }
+
+    .chat-history {
+        height: 50vh;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        overflow: hidden;
+    }
+
+    .user-info p {
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: calc(100% - 90px);
+    }
+
+    #session-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .modal-content {
+        padding: 1.5rem;
+    }
+
+    /* DevTools: fit within viewport width */
+    #devtools-container {
+        width: calc(100vw - 2rem);
+        right: 1rem;
+    }
+
+    .message .bubble {
+        max-width: 88%;
+    }
+}
+
+/* ========================================
+   Responsive — Phone (≤480px)
+   ======================================== */
+@media (max-width: 480px) {
+    #app {
+        padding: 0.75rem;
+    }
+
+    h1 {
+        font-size: 1.6rem;
+    }
+
+    header {
+        margin-bottom: 1rem;
+    }
+
+    .btn {
+        padding: 0.65rem 1.1rem;
+        font-size: 0.9rem;
+    }
+
+    /* 카드 여백 축소 — 채팅창 크램핑 방지 */
+    .card {
+        padding: 0.9rem;
+        margin-top: 0.75rem;
+        border-radius: 8px;
+    }
+
+    .chat-history {
+        height: 52vh;
+    }
+
+    #chat-input {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .chat-input-area {
+        gap: 0.4rem;
+        margin-top: 0.6rem;
+    }
+
+    #session-toolbar {
+        gap: 0.3rem;
+        margin-bottom: 0.5rem;
+    }
+
+    #session-select {
+        font-size: 0.8rem;
+        padding: 0.4rem;
+    }
+
+    .message .bubble {
+        max-width: 94%;
+        padding: 0.6rem 0.9rem;
+    }
+
+    .modal-content {
+        padding: 1rem;
+        width: 95%;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .modal-actions .btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Floating buttons: smaller on phone */
+    .floating-btn,
+    #devtools-toggle {
+        width: 42px;
+        height: 42px;
+        font-size: 1.2rem;
+        right: 12px;
+    }
+
+    .floating-btn.settings-btn {
+        bottom: 68px;
+    }
+
+    #devtools-toggle {
+        bottom: 14px;
+    }
+
+    #devtools-container {
+        width: calc(100vw - 1.5rem);
+        right: 0.75rem;
+        height: 60vh;
     }
 }
 
@@ -413,14 +592,17 @@ h1 {
     background-color: #2a2a2a;
     border-radius: 6px;
     padding: 0.8em 1em;
-    overflow-x: auto;
     margin: 0.6em 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 .message.assistant .bubble pre code {
     background: none;
     padding: 0;
     color: #abb2bf;
     font-size: 0.85em;
+    white-space: pre-wrap;
 }
 .message.assistant .bubble blockquote {
     border-left: 3px solid #666;
