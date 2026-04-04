@@ -163,6 +163,16 @@ async function reroll() {
     }
     if (lastIdx === -1) return;
 
+    const currentResponse = messageHistory[lastIdx].content;
+
+    // Ensure the current response is captured in alternativeResponses before discarding it.
+    // This handles the case where the response was loaded from Drive (alternativeResponses is empty)
+    // or the currentAltIndex has drifted from the actual content.
+    if (alternativeResponses.length === 0 || alternativeResponses[currentAltIndex] !== currentResponse) {
+        alternativeResponses = [currentResponse];
+        currentAltIndex = 0;
+    }
+
     // Remove from history and DOM
     messageHistory.splice(lastIdx, 1);
     if (lastAssistantMsgEl) {
