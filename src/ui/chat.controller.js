@@ -21,6 +21,11 @@ let messageHistory = [];
 let lastAssistantMsgEl = null;
 let isGenerating = false;
 
+// Reroll history: all generated alternatives for the current last message slot.
+// Resets when a new user message is sent or session changes.
+let alternativeResponses = [];
+let currentAltIndex = 0;
+
 export function initChat() {
     if (sendBtn) sendBtn.onclick = sendMessage;
     if (chatInput) {
@@ -73,6 +78,8 @@ export function loadSessionMessages(messages, sessionId) {
     messageHistory = messages || [];
     currentSessionId = sessionId;
     lastAssistantMsgEl = null;
+    alternativeResponses = [];
+    currentAltIndex = 0;
 
     // Clear and re-render chat history
     if (chatHistory) {
@@ -92,6 +99,8 @@ export function clearChat() {
     messageHistory = [];
     currentSessionId = `chat_${new Date().toISOString().replace(/[:.]/g, '-')}`;
     lastAssistantMsgEl = null;
+    alternativeResponses = [];
+    currentAltIndex = 0;
 
     if (chatHistory) {
         chatHistory.innerHTML = '';
@@ -113,8 +122,10 @@ async function sendMessage() {
 
     const activeCharacterId = characterService.activeCharacterId;
 
-    // 1. Add User Message
+    // 1. Add User Message & reset reroll state for new message slot
     addMessageToUI('user', text);
+    alternativeResponses = [];
+    currentAltIndex = 0;
 
     // Construct full history with system prompt + persona
     const personaPrompt = personaService.getPersonaPrompt();
@@ -137,12 +148,12 @@ async function sendMessage() {
 
 /**
  * Regenerate the last assistant response.
- * Removes the last assistant message from history and re-calls the LLM.
+ * Saves the current response to reroll history and re-calls the LLM.
  */
 async function reroll() {
     if (isGenerating) return;
 
-    // Find and remove the last assistant message from history
+    // Find the last assistant message in history
     let lastIdx = -1;
     for (let i = messageHistory.length - 1; i >= 0; i--) {
         if (messageHistory[i].role === 'assistant') {
@@ -152,9 +163,8 @@ async function reroll() {
     }
     if (lastIdx === -1) return;
 
+    // Remove from history and DOM
     messageHistory.splice(lastIdx, 1);
-
-    // Remove last assistant message from DOM
     if (lastAssistantMsgEl) {
         lastAssistantMsgEl.remove();
         lastAssistantMsgEl = null;
@@ -173,6 +183,47 @@ async function reroll() {
 }
 
 /**
+ * Navigate to a different alternative response.
+ * @param {number} direction - -1 (prev) or +1 (next)
+ */
+async function navigateAlternative(direction) {
+    const newIndex = currentAltIndex + direction;
+    if (newIndex < 0 || newIndex >= alternativeResponses.length) return;
+
+    currentAltIndex = newIndex;
+    const selectedText = alternativeResponses[currentAltIndex];
+
+    // Update messageHistory
+    let lastIdx = -1;
+    for (let i = messageHistory.length - 1; i >= 0; i--) {
+        if (messageHistory[i].role === 'assistant') {
+            lastIdx = i;
+            break;
+        }
+    }
+    if (lastIdx !== -1) messageHistory[lastIdx].content = selectedText;
+
+    // Re-render the last assistant bubble
+    if (lastAssistantMsgEl) {
+        const bubble = lastAssistantMsgEl.querySelector('.bubble');
+        if (bubble) {
+            const html = renderMarkdown(selectedText);
+            if (html !== null) {
+                bubble.innerHTML = html;
+            } else {
+                bubble.innerText = selectedText;
+            }
+        }
+        _updateAltNav(lastAssistantMsgEl);
+    }
+
+    // Auto-save the selected response
+    const activeCharacterId = characterService.activeCharacterId;
+    const savedId = await chatRepository.saveSession(currentSessionId, messageHistory, activeCharacterId);
+    if (savedId) currentSessionId = savedId;
+}
+
+/**
  * Call LLM and append the response as an assistant message.
  * Shared by sendMessage() and reroll().
  */
@@ -184,6 +235,9 @@ async function _generateAndAppend(fullHistory, activeCharacterId) {
         const responseText = await llmService.generate(fullHistory);
 
         removeMessage(loadingId);
+        alternativeResponses.push(responseText);
+        currentAltIndex = alternativeResponses.length - 1;
+
         addMessageToUI('assistant', responseText);
         messageHistory.push({ role: 'assistant', content: responseText });
 
@@ -200,10 +254,10 @@ async function _generateAndAppend(fullHistory, activeCharacterId) {
 }
 
 function addMessageToUI(role, text) {
-    // Remove reroll button from the previous last assistant message
+    // Remove reroll actions from the previous last assistant message
     if (role === 'assistant' && lastAssistantMsgEl) {
-        const prevBtn = lastAssistantMsgEl.querySelector('.reroll-btn');
-        if (prevBtn) prevBtn.remove();
+        const prevActions = lastAssistantMsgEl.querySelector('.reroll-actions');
+        if (prevActions) prevActions.remove();
     }
 
     const div = document.createElement('div');
@@ -222,14 +276,7 @@ function addMessageToUI(role, text) {
         }
 
         div.appendChild(bubble);
-
-        const rerollBtn = document.createElement('button');
-        rerollBtn.className = 'reroll-btn';
-        rerollBtn.title = '응답 재생성';
-        rerollBtn.textContent = '↺ 재생성';
-        rerollBtn.onclick = () => reroll();
-        div.appendChild(rerollBtn);
-
+        div.appendChild(_buildRerollActions());
         lastAssistantMsgEl = div;
     } else {
         bubble.innerText = text;
@@ -240,6 +287,54 @@ function addMessageToUI(role, text) {
     chatHistory.scrollTop = chatHistory.scrollHeight;
 
     return div.id;
+}
+
+/**
+ * Build the reroll actions bar (navigator + reroll button).
+ */
+function _buildRerollActions() {
+    const actions = document.createElement('div');
+    actions.className = 'reroll-actions';
+
+    if (alternativeResponses.length > 1) {
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'alt-nav';
+        prevBtn.textContent = '◀';
+        prevBtn.disabled = currentAltIndex === 0;
+        prevBtn.onclick = () => navigateAlternative(-1);
+
+        const counter = document.createElement('span');
+        counter.className = 'alt-counter';
+        counter.textContent = `${currentAltIndex + 1}/${alternativeResponses.length}`;
+
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'alt-nav';
+        nextBtn.textContent = '▶';
+        nextBtn.disabled = currentAltIndex === alternativeResponses.length - 1;
+        nextBtn.onclick = () => navigateAlternative(1);
+
+        actions.appendChild(prevBtn);
+        actions.appendChild(counter);
+        actions.appendChild(nextBtn);
+    }
+
+    const rerollBtn = document.createElement('button');
+    rerollBtn.className = 'reroll-btn';
+    rerollBtn.title = '응답 재생성';
+    rerollBtn.textContent = '↺ 재생성';
+    rerollBtn.onclick = () => reroll();
+    actions.appendChild(rerollBtn);
+
+    return actions;
+}
+
+/**
+ * Update the alt-nav counter and button states in-place.
+ */
+function _updateAltNav(msgEl) {
+    const actions = msgEl.querySelector('.reroll-actions');
+    if (!actions) return;
+    actions.replaceWith(_buildRerollActions());
 }
 
 function addLoadingIndicator() {
