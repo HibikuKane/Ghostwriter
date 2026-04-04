@@ -259,12 +259,40 @@ body {
         font-size: 0.9rem;
     }
 
+    /* 카드 여백 축소 — 채팅창 크램핑 방지 */
+    .card {
+        padding: 0.9rem;
+        margin-top: 0.75rem;
+        border-radius: 8px;
+    }
+
     .chat-history {
-        height: 55vh;
+        height: 52vh;
     }
 
     #chat-input {
+        padding: 0.6rem 0.75rem;
         font-size: 0.95rem;
+    }
+
+    .chat-input-area {
+        gap: 0.4rem;
+        margin-top: 0.6rem;
+    }
+
+    #session-toolbar {
+        gap: 0.3rem;
+        margin-bottom: 0.5rem;
+    }
+
+    #session-select {
+        font-size: 0.8rem;
+        padding: 0.4rem;
+    }
+
+    .message .bubble {
+        max-width: 94%;
+        padding: 0.6rem 0.9rem;
     }
 
     .modal-content {
@@ -280,10 +308,6 @@ body {
     .modal-actions .btn {
         width: 100%;
         text-align: center;
-    }
-
-    .message .bubble {
-        max-width: 92%;
     }
 
     /* Floating buttons: smaller on phone */
