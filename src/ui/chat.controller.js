@@ -8,6 +8,7 @@ import { chatRepository } from '../memory/chat.repository.js';
 import { characterService } from '../persona/character.service.js';
 import { personaService } from '../persona/persona.service.js';
 import { showToast } from '../utils/toast.js';
+import { renderMarkdown } from '../utils/markdown.js';
 
 // DOM Elements
 const chatSection = document.getElementById('chat-section');
@@ -156,7 +157,17 @@ function addMessageToUI(role, text) {
 
     const bubble = document.createElement('div');
     bubble.className = 'bubble';
-    bubble.innerText = text;
+
+    if (role === 'assistant') {
+        const html = renderMarkdown(text);
+        if (html !== null) {
+            bubble.innerHTML = html;
+        } else {
+            bubble.innerText = text;
+        }
+    } else {
+        bubble.innerText = text;
+    }
 
     div.appendChild(bubble);
     chatHistory.appendChild(div);
