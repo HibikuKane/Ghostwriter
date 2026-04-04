@@ -301,6 +301,13 @@ h1 {
     align-items: flex-start;
 }
 
+.reroll-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+}
+
 .reroll-btn {
     background: none;
     border: 1px solid #555;
@@ -309,13 +316,40 @@ h1 {
     padding: 2px 10px;
     font-size: 0.75rem;
     cursor: pointer;
-    margin-top: 4px;
     transition: color 0.15s, border-color 0.15s;
 }
 
 .reroll-btn:hover {
     color: #ddd;
     border-color: #999;
+}
+
+.alt-nav {
+    background: none;
+    border: 1px solid #555;
+    color: #777;
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.alt-nav:hover:not(:disabled) {
+    color: #ddd;
+    border-color: #999;
+}
+
+.alt-nav:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.alt-counter {
+    font-size: 0.75rem;
+    color: #888;
+    min-width: 28px;
+    text-align: center;
 }
 
 .message .bubble {
