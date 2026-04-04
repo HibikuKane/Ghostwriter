@@ -4,6 +4,8 @@
  */
 import { FOLDER_NAME } from '../config.js';
 import { log } from '../utils/logger.js';
+import { ensureValidToken } from '../auth/auth.service.js';
+import { fetchWithTimeout } from '../utils/network.js';
 
 /**
  * Initialize the Ghostwriter workspace in Google Drive
@@ -70,8 +72,9 @@ async function createStatusFile(folderId) {
         log(`Found existing status.json (ID: ${fileId}). Updating...`, 'info');
 
         // Read current content to preserve settings
+        await ensureValidToken();
         const accessToken = gapi.client.getToken().access_token;
-        const fetchResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+        const fetchResponse = await fetchWithTimeout(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
             headers: { 'Authorization': 'Bearer ' + accessToken }
         });
 
@@ -139,8 +142,9 @@ export async function readStatusFile() {
         const fileId = fileResponse.result.files[0].id;
 
         // Read file content
+        await ensureValidToken();
         const accessToken = gapi.client.getToken().access_token;
-        const fetchResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+        const fetchResponse = await fetchWithTimeout(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
             headers: {
                 'Authorization': 'Bearer ' + accessToken
             }
@@ -245,8 +249,9 @@ async function createFile(folderId, fileName, content) {
         JSON.stringify(content, null, 2) +
         close_delim;
 
+    await ensureValidToken();
     const accessToken = gapi.client.getToken().access_token;
-    const fetchResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+    const fetchResponse = await fetchWithTimeout('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
         method: 'POST',
         headers: {
             'Authorization': 'Bearer ' + accessToken,
@@ -261,10 +266,11 @@ async function createFile(folderId, fileName, content) {
 }
 
 async function updateFile(fileId, content) {
+    await ensureValidToken();
     const accessToken = gapi.client.getToken().access_token;
 
     // For simple update of content only (using uploadType=media)
-    const fetchResponse = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+    const fetchResponse = await fetchWithTimeout(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
         method: 'PATCH',
         headers: {
             'Authorization': 'Bearer ' + accessToken,

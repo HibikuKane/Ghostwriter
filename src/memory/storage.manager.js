@@ -4,6 +4,9 @@
  */
 import { FOLDER_NAME } from '../config.js';
 import { log } from '../utils/logger.js';
+import { ensureValidToken } from '../auth/auth.service.js';
+import { fetchWithTimeout } from '../utils/network.js';
+import { cacheManager } from './cache.manager.js';
 
 const FOLDER_MAP = {
     'persona': 'personas',
@@ -42,7 +45,7 @@ export class StorageManager {
             // 2. Find or Create Subfolders
             const folderNames = Object.values(FOLDER_MAP); // ['personas', 'characters', etc.]
 
-            // We can do this in parallel, but sequential is safer for now to avoid race conditions or rate limits
+            // Sequential to avoid race conditions or rate limits
             for (const name of folderNames) {
                 this.folders[name] = await this._findOrCreateFolder(name, this.rootFolderId);
                 log(`Folder mapped: ${name} -> ${this.folders[name]}`, 'info');
@@ -51,8 +54,12 @@ export class StorageManager {
             this.isInitialized = true;
             log('StorageManager initialized successfully.', 'success');
         } catch (err) {
+            // Reset initialization state so next call retries
+            // Keep any folders that were successfully mapped (idempotent)
+            this.isInitialized = false;
             log('Error initializing StorageManager: ' + err.message, 'error');
             console.error(err);
+            throw err;
         }
     }
 
@@ -112,13 +119,15 @@ export class StorageManager {
         item.updatedAt = new Date().toISOString();
         if (!item.createdAt) item.createdAt = item.updatedAt;
 
-        // Construct filename. 
+        // Construct filename.
         let fileName = (item.name || item.id) + '.json';
 
         if (fileId) {
             // Try to update existng file
             try {
                 await this._updateFile(fileId, item);
+                cacheManager.set(`item:${fileId}`, { ...item });
+                cacheManager.invalidate(`list:${type}`);
                 log(`Saved ${type}: ${fileName} (${fileId})`, 'info');
                 return fileId;
             } catch (e) {
@@ -135,6 +144,8 @@ export class StorageManager {
             item.id = newFileId;
         }
 
+        cacheManager.set(`item:${newFileId}`, { ...item });
+        cacheManager.invalidate(`list:${type}`);
         log(`Created new ${type}: ${fileName}`, 'success');
         return newFileId;
     }
@@ -148,13 +159,22 @@ export class StorageManager {
     async loadItem(type, fileId) {
         if (!this.isInitialized) await this.init();
 
+        const cacheKey = `item:${fileId}`;
+        const cached = cacheManager.get(cacheKey);
+        if (cached) {
+            log(`Cache hit: ${type} ${fileId}`, 'info');
+            return cached;
+        }
+
         try {
+            await ensureValidToken();
             const response = await gapi.client.drive.files.get({
                 fileId: fileId,
                 alt: 'media'
             });
             const item = response.result;
             item.id = fileId;
+            cacheManager.set(cacheKey, item);
             return item;
         } catch (err) {
             log(`Error loading ${type} ${fileId}: ` + err.message, 'error');
@@ -169,8 +189,15 @@ export class StorageManager {
      */
     async listItems(type) {
         if (!this.isInitialized) await this.init();
-        const folderId = this._getFolderId(type);
 
+        const cacheKey = `list:${type}`;
+        const cached = cacheManager.get(cacheKey);
+        if (cached) {
+            log(`Cache hit: list ${type}`, 'info');
+            return cached;
+        }
+
+        const folderId = this._getFolderId(type);
         const q = `'${folderId}' in parents and trashed = false`;
         const response = await gapi.client.drive.files.list({
             q,
@@ -178,7 +205,9 @@ export class StorageManager {
             pageSize: 100
         });
 
-        return response.result.files;
+        const files = response.result.files;
+        cacheManager.set(cacheKey, files);
+        return files;
     }
 
     /**
@@ -205,8 +234,9 @@ export class StorageManager {
             JSON.stringify(content, null, 2) +
             close_delim;
 
+        await ensureValidToken();
         const accessToken = gapi.client.getToken().access_token;
-        const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        const res = await fetchWithTimeout('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
             method: 'POST',
             headers: {
                 'Authorization': 'Bearer ' + accessToken,
@@ -228,8 +258,9 @@ export class StorageManager {
      * Internal: Update File
      */
     async _updateFile(fileId, content) {
+        await ensureValidToken();
         const accessToken = gapi.client.getToken().access_token;
-        const res = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+        const res = await fetchWithTimeout(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
             method: 'PATCH',
             headers: {
                 'Authorization': 'Bearer ' + accessToken,
@@ -250,6 +281,8 @@ export class StorageManager {
     async deleteItem(fileId) {
         if (!this.isInitialized) await this.init();
         await gapi.client.drive.files.delete({ fileId: fileId });
+        cacheManager.invalidate(`item:${fileId}`);
+        Object.keys(FOLDER_MAP).forEach(type => cacheManager.invalidate(`list:${type}`));
         log(`Deleted file: ${fileId}`, 'info');
     }
 }

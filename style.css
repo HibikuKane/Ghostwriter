@@ -9,6 +9,10 @@
     --danger: #f44336;
 }
 
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: var(--bg-color);
@@ -17,6 +21,7 @@ body {
     display: flex;
     justify-content: center;
     min-height: 100vh;
+    overflow-x: hidden;
 }
 
 #app {
@@ -143,15 +148,189 @@ body {
     margin-top: 0;
 }
 
-/* Responsive: stack on small screens */
+/* ========================================
+   Responsive — Tablet (≤700px)
+   ======================================== */
 @media (max-width: 700px) {
+    #app {
+        padding: 1rem;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    header {
+        margin-bottom: 1.5rem;
+    }
+
     .layout-main {
         flex-direction: column;
     }
 
+    /* Sidebar: 가로 스크롤 스트립으로 전환 */
     .sidebar {
         width: 100%;
         min-width: unset;
+        padding: 0.6rem 0.75rem;
+    }
+
+    .sidebar-header {
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.4rem;
+    }
+
+    #character-list {
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 0.4rem;
+        padding-bottom: 0.3rem;
+    }
+
+    .character-item {
+        flex-shrink: 0;
+        min-width: 100px;
+        max-width: 140px;
+    }
+
+    /* 호버 시 나타나는 액션 버튼은 모바일에서 항상 표시 */
+    .character-item .character-actions {
+        display: flex;
+    }
+
+    .chat-history {
+        height: 50vh;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        overflow: hidden;
+    }
+
+    .user-info p {
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: calc(100% - 90px);
+    }
+
+    #session-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .modal-content {
+        padding: 1.5rem;
+    }
+
+    /* DevTools: fit within viewport width */
+    #devtools-container {
+        width: calc(100vw - 2rem);
+        right: 1rem;
+    }
+
+    .message .bubble {
+        max-width: 88%;
+    }
+}
+
+/* ========================================
+   Responsive — Phone (≤480px)
+   ======================================== */
+@media (max-width: 480px) {
+    #app {
+        padding: 0.75rem;
+    }
+
+    h1 {
+        font-size: 1.6rem;
+    }
+
+    header {
+        margin-bottom: 1rem;
+    }
+
+    .btn {
+        padding: 0.65rem 1.1rem;
+        font-size: 0.9rem;
+    }
+
+    /* 카드 여백 축소 — 채팅창 크램핑 방지 */
+    .card {
+        padding: 0.9rem;
+        margin-top: 0.75rem;
+        border-radius: 8px;
+    }
+
+    .chat-history {
+        height: 52vh;
+    }
+
+    #chat-input {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .chat-input-area {
+        gap: 0.4rem;
+        margin-top: 0.6rem;
+    }
+
+    #session-toolbar {
+        gap: 0.3rem;
+        margin-bottom: 0.5rem;
+    }
+
+    #session-select {
+        font-size: 0.8rem;
+        padding: 0.4rem;
+    }
+
+    .message .bubble {
+        max-width: 94%;
+        padding: 0.6rem 0.9rem;
+    }
+
+    .modal-content {
+        padding: 1rem;
+        width: 95%;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .modal-actions .btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Floating buttons: smaller on phone */
+    .floating-btn,
+    #devtools-toggle {
+        width: 42px;
+        height: 42px;
+        font-size: 1.2rem;
+        right: 12px;
+    }
+
+    .floating-btn.settings-btn {
+        bottom: 68px;
+    }
+
+    #devtools-toggle {
+        bottom: 14px;
+    }
+
+    #devtools-container {
+        width: calc(100vw - 1.5rem);
+        right: 0.75rem;
+        height: 60vh;
     }
 }
 
@@ -297,7 +476,59 @@ h1 {
 }
 
 .message.assistant {
-    justify-content: flex-start;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.reroll-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.reroll-btn {
+    background: none;
+    border: 1px solid #555;
+    color: #777;
+    border-radius: 4px;
+    padding: 2px 10px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.reroll-btn:hover {
+    color: #ddd;
+    border-color: #999;
+}
+
+.alt-nav {
+    background: none;
+    border: 1px solid #555;
+    color: #777;
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.alt-nav:hover:not(:disabled) {
+    color: #ddd;
+    border-color: #999;
+}
+
+.alt-nav:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.alt-counter {
+    font-size: 0.75rem;
+    color: #888;
+    min-width: 28px;
+    text-align: center;
 }
 
 .message .bubble {
@@ -324,6 +555,68 @@ h1 {
     color: var(--danger);
     font-style: italic;
     border: 1px solid var(--danger);
+}
+
+/* Markdown rendering inside assistant bubbles */
+.message.assistant .bubble p {
+    margin: 0 0 0.6em 0;
+}
+.message.assistant .bubble p:last-child {
+    margin-bottom: 0;
+}
+.message.assistant .bubble h1,
+.message.assistant .bubble h2,
+.message.assistant .bubble h3 {
+    margin: 0.8em 0 0.4em 0;
+    color: #fff;
+    font-size: 1em;
+    font-weight: bold;
+}
+.message.assistant .bubble ul,
+.message.assistant .bubble ol {
+    margin: 0.4em 0;
+    padding-left: 1.4em;
+}
+.message.assistant .bubble li {
+    margin: 0.2em 0;
+}
+.message.assistant .bubble code {
+    background-color: #2a2a2a;
+    color: #e5c07b;
+    padding: 0.1em 0.4em;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.9em;
+}
+.message.assistant .bubble pre {
+    background-color: #2a2a2a;
+    border-radius: 6px;
+    padding: 0.8em 1em;
+    margin: 0.6em 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+.message.assistant .bubble pre code {
+    background: none;
+    padding: 0;
+    color: #abb2bf;
+    font-size: 0.85em;
+    white-space: pre-wrap;
+}
+.message.assistant .bubble blockquote {
+    border-left: 3px solid #666;
+    margin: 0.4em 0;
+    padding-left: 0.8em;
+    color: #aaa;
+    font-style: italic;
+}
+.message.assistant .bubble a {
+    color: var(--accent);
+    text-decoration: underline;
+}
+.message.assistant .bubble strong {
+    color: #fff;
 }
 
 .chat-input-area {
@@ -744,4 +1037,107 @@ h1 {
 
 .dt-payload.hidden {
     display: none;
+}
+
+/* ========================================
+   Toast Notification System
+   ======================================== */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    pointer-events: none;
+    max-width: 90vw;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 10px;
+    background-color: #2d2d2d;
+    border: 1px solid #444;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.3s, transform 0.3s;
+    min-width: 250px;
+    max-width: 450px;
+}
+
+.toast-show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-hide {
+    animation: toastFadeOut 0.3s ease forwards;
+}
+
+@keyframes toastFadeOut {
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+.toast-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.toast-message {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.toast-error {
+    border-color: var(--danger);
+    background-color: rgba(244, 67, 54, 0.15);
+}
+
+.toast-success {
+    border-color: var(--success);
+    background-color: rgba(76, 175, 80, 0.15);
+}
+
+.toast-warning {
+    border-color: #ff9800;
+    background-color: rgba(255, 152, 0, 0.15);
+}
+
+.toast-info {
+    border-color: var(--accent);
+    background-color: rgba(100, 108, 255, 0.15);
+}
+
+/* ========================================
+   Offline Banner
+   ======================================== */
+.offline-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10001;
+    background-color: rgba(255, 152, 0, 0.95);
+    color: #1a1a1a;
+    text-align: center;
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: transform 0.3s ease;
+}
+
+.offline-banner.hidden {
+    transform: translateY(-100%);
 }

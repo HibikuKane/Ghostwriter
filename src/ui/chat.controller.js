@@ -7,6 +7,8 @@ import { log } from '../utils/logger.js';
 import { chatRepository } from '../memory/chat.repository.js';
 import { characterService } from '../persona/character.service.js';
 import { personaService } from '../persona/persona.service.js';
+import { showToast } from '../utils/toast.js';
+import { renderMarkdown } from '../utils/markdown.js';
 
 // DOM Elements
 const chatSection = document.getElementById('chat-section');
@@ -16,6 +18,13 @@ const sendBtn = document.getElementById('send-btn');
 
 let currentSessionId = null;
 let messageHistory = [];
+let lastAssistantMsgEl = null;
+let isGenerating = false;
+
+// Reroll history: all generated alternatives for the current last message slot.
+// Resets when a new user message is sent or session changes.
+let alternativeResponses = [];
+let currentAltIndex = 0;
 
 export function initChat() {
     if (sendBtn) sendBtn.onclick = sendMessage;
@@ -68,6 +77,9 @@ export function setCurrentSessionId(id) {
 export function loadSessionMessages(messages, sessionId) {
     messageHistory = messages || [];
     currentSessionId = sessionId;
+    lastAssistantMsgEl = null;
+    alternativeResponses = [];
+    currentAltIndex = 0;
 
     // Clear and re-render chat history
     if (chatHistory) {
@@ -86,6 +98,9 @@ export function loadSessionMessages(messages, sessionId) {
 export function clearChat() {
     messageHistory = [];
     currentSessionId = `chat_${new Date().toISOString().replace(/[:.]/g, '-')}`;
+    lastAssistantMsgEl = null;
+    alternativeResponses = [];
+    currentAltIndex = 0;
 
     if (chatHistory) {
         chatHistory.innerHTML = '';
@@ -103,12 +118,14 @@ export function clearChat() {
  */
 async function sendMessage() {
     const text = chatInput.value.trim();
-    if (!text) return;
+    if (!text || isGenerating) return;
 
     const activeCharacterId = characterService.activeCharacterId;
 
-    // 1. Add User Message
+    // 1. Add User Message & reset reroll state for new message slot
     addMessageToUI('user', text);
+    alternativeResponses = [];
+    currentAltIndex = 0;
 
     // Construct full history with system prompt + persona
     const personaPrompt = personaService.getPersonaPrompt();
@@ -126,42 +143,208 @@ async function sendMessage() {
     const savedId = await chatRepository.saveSession(currentSessionId, messageHistory, activeCharacterId);
     if (savedId) currentSessionId = savedId;
 
-    // 2. Loading State
+    await _generateAndAppend(fullHistory, activeCharacterId);
+}
+
+/**
+ * Regenerate the last assistant response.
+ * Saves the current response to reroll history and re-calls the LLM.
+ */
+async function reroll() {
+    if (isGenerating) return;
+
+    // Find the last assistant message in history
+    let lastIdx = -1;
+    for (let i = messageHistory.length - 1; i >= 0; i--) {
+        if (messageHistory[i].role === 'assistant') {
+            lastIdx = i;
+            break;
+        }
+    }
+    if (lastIdx === -1) return;
+
+    const currentResponse = messageHistory[lastIdx].content;
+
+    // Ensure the current response is captured in alternativeResponses before discarding it.
+    // This handles the case where the response was loaded from Drive (alternativeResponses is empty)
+    // or the currentAltIndex has drifted from the actual content.
+    if (alternativeResponses.length === 0 || alternativeResponses[currentAltIndex] !== currentResponse) {
+        alternativeResponses = [currentResponse];
+        currentAltIndex = 0;
+    }
+
+    // Remove from history and DOM
+    messageHistory.splice(lastIdx, 1);
+    if (lastAssistantMsgEl) {
+        lastAssistantMsgEl.remove();
+        lastAssistantMsgEl = null;
+    }
+
+    const activeCharacterId = characterService.activeCharacterId;
+    const personaPrompt = personaService.getPersonaPrompt();
+    const fullHistory = [
+        characterService.getSystemMessage(),
+        ...(personaPrompt ? [{ role: 'system', content: personaPrompt }] : []),
+        ...messageHistory,
+    ];
+
+    log('Rerolling last assistant response', 'info');
+    await _generateAndAppend(fullHistory, activeCharacterId);
+}
+
+/**
+ * Navigate to a different alternative response.
+ * @param {number} direction - -1 (prev) or +1 (next)
+ */
+async function navigateAlternative(direction) {
+    const newIndex = currentAltIndex + direction;
+    if (newIndex < 0 || newIndex >= alternativeResponses.length) return;
+
+    currentAltIndex = newIndex;
+    const selectedText = alternativeResponses[currentAltIndex];
+
+    // Update messageHistory
+    let lastIdx = -1;
+    for (let i = messageHistory.length - 1; i >= 0; i--) {
+        if (messageHistory[i].role === 'assistant') {
+            lastIdx = i;
+            break;
+        }
+    }
+    if (lastIdx !== -1) messageHistory[lastIdx].content = selectedText;
+
+    // Re-render the last assistant bubble
+    if (lastAssistantMsgEl) {
+        const bubble = lastAssistantMsgEl.querySelector('.bubble');
+        if (bubble) {
+            const html = renderMarkdown(selectedText);
+            if (html !== null) {
+                bubble.innerHTML = html;
+            } else {
+                bubble.innerText = selectedText;
+            }
+        }
+        _updateAltNav(lastAssistantMsgEl);
+    }
+
+    // Auto-save the selected response
+    const activeCharacterId = characterService.activeCharacterId;
+    const savedId = await chatRepository.saveSession(currentSessionId, messageHistory, activeCharacterId);
+    if (savedId) currentSessionId = savedId;
+}
+
+/**
+ * Call LLM and append the response as an assistant message.
+ * Shared by sendMessage() and reroll().
+ */
+async function _generateAndAppend(fullHistory, activeCharacterId) {
+    isGenerating = true;
     const loadingId = addLoadingIndicator();
 
     try {
-        // 3. Call LLM
         const responseText = await llmService.generate(fullHistory);
 
-        // 4. Remove Loading & Add AI Message
         removeMessage(loadingId);
+        alternativeResponses.push(responseText);
+        currentAltIndex = alternativeResponses.length - 1;
+
         addMessageToUI('assistant', responseText);
         messageHistory.push({ role: 'assistant', content: responseText });
 
-        // Auto-save assistant message (with characterId)
-        const savedId2 = await chatRepository.saveSession(currentSessionId, messageHistory, activeCharacterId);
-        if (savedId2) currentSessionId = savedId2;
+        const savedId = await chatRepository.saveSession(currentSessionId, messageHistory, activeCharacterId);
+        if (savedId) currentSessionId = savedId;
 
     } catch (err) {
         removeMessage(loadingId);
         log('Error generating response: ' + err.message, 'error');
-        addMessageToUI('system', 'Error: ' + err.message);
+        showToast('응답 생성에 실패했습니다: ' + err.message, 'error');
+    } finally {
+        isGenerating = false;
     }
 }
 
 function addMessageToUI(role, text) {
+    // Remove reroll actions from the previous last assistant message
+    if (role === 'assistant' && lastAssistantMsgEl) {
+        const prevActions = lastAssistantMsgEl.querySelector('.reroll-actions');
+        if (prevActions) prevActions.remove();
+    }
+
     const div = document.createElement('div');
+    div.id = 'msg-' + Date.now();
     div.className = `message ${role}`;
 
     const bubble = document.createElement('div');
     bubble.className = 'bubble';
-    bubble.innerText = text;
 
-    div.appendChild(bubble);
+    if (role === 'assistant') {
+        const html = renderMarkdown(text);
+        if (html !== null) {
+            bubble.innerHTML = html;
+        } else {
+            bubble.innerText = text;
+        }
+
+        div.appendChild(bubble);
+        div.appendChild(_buildRerollActions());
+        lastAssistantMsgEl = div;
+    } else {
+        bubble.innerText = text;
+        div.appendChild(bubble);
+    }
+
     chatHistory.appendChild(div);
     chatHistory.scrollTop = chatHistory.scrollHeight;
 
-    return div.id = 'msg-' + Date.now();
+    return div.id;
+}
+
+/**
+ * Build the reroll actions bar (navigator + reroll button).
+ */
+function _buildRerollActions() {
+    const actions = document.createElement('div');
+    actions.className = 'reroll-actions';
+
+    if (alternativeResponses.length > 1) {
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'alt-nav';
+        prevBtn.textContent = '◀';
+        prevBtn.disabled = currentAltIndex === 0;
+        prevBtn.onclick = () => navigateAlternative(-1);
+
+        const counter = document.createElement('span');
+        counter.className = 'alt-counter';
+        counter.textContent = `${currentAltIndex + 1}/${alternativeResponses.length}`;
+
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'alt-nav';
+        nextBtn.textContent = '▶';
+        nextBtn.disabled = currentAltIndex === alternativeResponses.length - 1;
+        nextBtn.onclick = () => navigateAlternative(1);
+
+        actions.appendChild(prevBtn);
+        actions.appendChild(counter);
+        actions.appendChild(nextBtn);
+    }
+
+    const rerollBtn = document.createElement('button');
+    rerollBtn.className = 'reroll-btn';
+    rerollBtn.title = '응답 재생성';
+    rerollBtn.textContent = '↺ 재생성';
+    rerollBtn.onclick = () => reroll();
+    actions.appendChild(rerollBtn);
+
+    return actions;
+}
+
+/**
+ * Update the alt-nav counter and button states in-place.
+ */
+function _updateAltNav(msgEl) {
+    const actions = msgEl.querySelector('.reroll-actions');
+    if (!actions) return;
+    actions.replaceWith(_buildRerollActions());
 }
 
 function addLoadingIndicator() {
