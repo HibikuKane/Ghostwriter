@@ -18,6 +18,8 @@ const sendBtn = document.getElementById('send-btn');
 
 let currentSessionId = null;
 let messageHistory = [];
+let lastAssistantMsgEl = null;
+let isGenerating = false;
 
 export function initChat() {
     if (sendBtn) sendBtn.onclick = sendMessage;
@@ -70,6 +72,7 @@ export function setCurrentSessionId(id) {
 export function loadSessionMessages(messages, sessionId) {
     messageHistory = messages || [];
     currentSessionId = sessionId;
+    lastAssistantMsgEl = null;
 
     // Clear and re-render chat history
     if (chatHistory) {
@@ -88,6 +91,7 @@ export function loadSessionMessages(messages, sessionId) {
 export function clearChat() {
     messageHistory = [];
     currentSessionId = `chat_${new Date().toISOString().replace(/[:.]/g, '-')}`;
+    lastAssistantMsgEl = null;
 
     if (chatHistory) {
         chatHistory.innerHTML = '';
@@ -105,7 +109,7 @@ export function clearChat() {
  */
 async function sendMessage() {
     const text = chatInput.value.trim();
-    if (!text) return;
+    if (!text || isGenerating) return;
 
     const activeCharacterId = characterService.activeCharacterId;
 
@@ -128,31 +132,82 @@ async function sendMessage() {
     const savedId = await chatRepository.saveSession(currentSessionId, messageHistory, activeCharacterId);
     if (savedId) currentSessionId = savedId;
 
-    // 2. Loading State
+    await _generateAndAppend(fullHistory, activeCharacterId);
+}
+
+/**
+ * Regenerate the last assistant response.
+ * Removes the last assistant message from history and re-calls the LLM.
+ */
+async function reroll() {
+    if (isGenerating) return;
+
+    // Find and remove the last assistant message from history
+    let lastIdx = -1;
+    for (let i = messageHistory.length - 1; i >= 0; i--) {
+        if (messageHistory[i].role === 'assistant') {
+            lastIdx = i;
+            break;
+        }
+    }
+    if (lastIdx === -1) return;
+
+    messageHistory.splice(lastIdx, 1);
+
+    // Remove last assistant message from DOM
+    if (lastAssistantMsgEl) {
+        lastAssistantMsgEl.remove();
+        lastAssistantMsgEl = null;
+    }
+
+    const activeCharacterId = characterService.activeCharacterId;
+    const personaPrompt = personaService.getPersonaPrompt();
+    const fullHistory = [
+        characterService.getSystemMessage(),
+        ...(personaPrompt ? [{ role: 'system', content: personaPrompt }] : []),
+        ...messageHistory,
+    ];
+
+    log('Rerolling last assistant response', 'info');
+    await _generateAndAppend(fullHistory, activeCharacterId);
+}
+
+/**
+ * Call LLM and append the response as an assistant message.
+ * Shared by sendMessage() and reroll().
+ */
+async function _generateAndAppend(fullHistory, activeCharacterId) {
+    isGenerating = true;
     const loadingId = addLoadingIndicator();
 
     try {
-        // 3. Call LLM
         const responseText = await llmService.generate(fullHistory);
 
-        // 4. Remove Loading & Add AI Message
         removeMessage(loadingId);
         addMessageToUI('assistant', responseText);
         messageHistory.push({ role: 'assistant', content: responseText });
 
-        // Auto-save assistant message (with characterId)
-        const savedId2 = await chatRepository.saveSession(currentSessionId, messageHistory, activeCharacterId);
-        if (savedId2) currentSessionId = savedId2;
+        const savedId = await chatRepository.saveSession(currentSessionId, messageHistory, activeCharacterId);
+        if (savedId) currentSessionId = savedId;
 
     } catch (err) {
         removeMessage(loadingId);
         log('Error generating response: ' + err.message, 'error');
         showToast('응답 생성에 실패했습니다: ' + err.message, 'error');
+    } finally {
+        isGenerating = false;
     }
 }
 
 function addMessageToUI(role, text) {
+    // Remove reroll button from the previous last assistant message
+    if (role === 'assistant' && lastAssistantMsgEl) {
+        const prevBtn = lastAssistantMsgEl.querySelector('.reroll-btn');
+        if (prevBtn) prevBtn.remove();
+    }
+
     const div = document.createElement('div');
+    div.id = 'msg-' + Date.now();
     div.className = `message ${role}`;
 
     const bubble = document.createElement('div');
@@ -165,15 +220,26 @@ function addMessageToUI(role, text) {
         } else {
             bubble.innerText = text;
         }
+
+        div.appendChild(bubble);
+
+        const rerollBtn = document.createElement('button');
+        rerollBtn.className = 'reroll-btn';
+        rerollBtn.title = '응답 재생성';
+        rerollBtn.textContent = '↺ 재생성';
+        rerollBtn.onclick = () => reroll();
+        div.appendChild(rerollBtn);
+
+        lastAssistantMsgEl = div;
     } else {
         bubble.innerText = text;
+        div.appendChild(bubble);
     }
 
-    div.appendChild(bubble);
     chatHistory.appendChild(div);
     chatHistory.scrollTop = chatHistory.scrollHeight;
 
-    return div.id = 'msg-' + Date.now();
+    return div.id;
 }
 
 function addLoadingIndicator() {
