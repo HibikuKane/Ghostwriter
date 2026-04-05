@@ -142,6 +142,83 @@ body {
     text-overflow: ellipsis;
 }
 
+.character-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-bottom: 0.15rem;
+}
+
+/* Character Modal — image preview */
+.char-image-preview {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid var(--border);
+    margin-bottom: 0.5rem;
+}
+
+.char-image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Character Modal — detail entries */
+.detail-entry {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.detail-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.detail-remove-btn {
+    font-size: 0.75rem;
+    padding: 0.1rem 0.4rem;
+    color: var(--text-muted);
+}
+
+.detail-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.1rem;
+    display: block;
+}
+
+.detail-keywords-input,
+.detail-content-input {
+    width: 100%;
+    background: var(--input-bg, rgba(255,255,255,0.07));
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-main);
+    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
+    box-sizing: border-box;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.detail-content-input {
+    min-height: 60px;
+}
+
 /* Chat section fills remaining space */
 .layout-main #chat-section {
     flex: 1;

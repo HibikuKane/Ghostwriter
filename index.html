@@ -101,6 +101,25 @@
                     <label for="char-system-prompt">시스템 프롬프트</label>
                     <textarea id="char-system-prompt" placeholder="이 캐릭터의 성격과 역할을 설명하세요" rows="5"></textarea>
                 </div>
+                <div class="form-group">
+                    <label>아바타 이미지 <small class="label-hint">(선택, 사이드바 표시용)</small></label>
+                    <div id="char-image-preview" class="char-image-preview hidden"></div>
+                    <input type="file" id="char-image-input" accept="image/*" style="display:none">
+                    <div style="display:flex; gap:0.5rem; margin-top:0.4rem;">
+                        <button type="button" id="char-image-upload-btn" class="btn secondary">📷 이미지 선택</button>
+                        <button type="button" id="char-image-clear-btn" class="btn text hidden">✕ 삭제</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                        <label style="margin-bottom:0;">세부설정집 <small class="label-hint">(키워드 트리거)</small></label>
+                        <button type="button" id="add-detail-btn" class="btn text" style="font-size:0.85rem;">+ 항목 추가</button>
+                    </div>
+                    <div id="detail-entries-list"></div>
+                    <small style="color:var(--text-muted); display:block; margin-top:0.4rem;">
+                        키워드가 대화에 등장하면 해당 내용이 시스템 프롬프트에 자동 주입됩니다.
+                    </small>
+                </div>
                 <div class="modal-actions">
                     <button id="delete-character-btn" class="btn danger-btn hidden">삭제</button>
                     <button id="save-character-btn" class="btn primary">저장</button>
