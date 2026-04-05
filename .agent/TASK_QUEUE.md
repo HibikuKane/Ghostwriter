@@ -21,7 +21,7 @@
 
 | ID | 태스크 | 상태 | 의존성 | 브랜치 |
 |----|--------|------|--------|--------|
-| P0-1 | Playwright E2E 세팅 | `READY` | — | `release/playwright-setup` |
+| P0-1 | Playwright E2E 세팅 | `WAITING_PR` | — | `release/playwright-setup` |
 
 > **P0-1 상세**: Playwright 설치 + headless 기본 설정. 로그인 플로우 스모크 테스트 1개 (성공 확인용). PR 생성 직전 자동 실행.
 
@@ -31,9 +31,9 @@
 
 | ID | 태스크 | 상태 | 의존성 | 브랜치 |
 |----|--------|------|--------|--------|
-| P2-1 | 캐릭터 에셋 관리 (#2) — 상세 설명 필드 + 키워드 트리거 | `READY` | — | `release/character-assets` |
-| P2-2 | 모델 세부 설정 (#3) — Temperature, Top-K UI | `READY` | — | `release/model-params` |
-| P2-3 | 인앱 가이드 시스템 기반 구축 | `READY` | — | `release/in-app-guide` |
+| P2-1 | 캐릭터 에셋 관리 (#2) — 상세 설명 필드 + 키워드 트리거 | `WAITING_PR` | — | `release/character-assets` |
+| P2-2 | 모델 세부 설정 (#3) — Temperature, Top-K UI | `WAITING_PR` | — | `release/model-params` |
+| P2-3 | 인앱 가이드 시스템 기반 구축 | `WAITING_PR` | — | `release/in-app-guide` |
 
 > **P2-1 상세**: `.ideas/features.md` #2 항목, `.ideas/technical-dependencies.md` Tier 2 참조
 
@@ -65,3 +65,7 @@ _현재 블로킹 없음_
 | 완료일 | ID | 태스크 | PR |
 |--------|----|--------|----|
 | 2026-04-05 | HARNESS | Phase Harness 설정 (CLAUDE.md + .agent/ 문서 재설계) | — |
+| 2026-04-05 | P0-1 | Playwright E2E 세팅 — 로그인 화면 스모크 테스트 | #20 |
+| 2026-04-05 | P2-1 | 캐릭터 에셋 관리 — 상세 설명 + 키워드 트리거 + 아바타 이미지 | #21 |
+| 2026-04-05 | P2-2 | 모델 세부 설정 — Temperature/MaxTokens/Top-P 슬라이더 UI | #22 |
+| 2026-04-05 | P2-3 | 인앱 가이드 시스템 — ? 툴팁 기반 컨텍스트 도움말 | #23 |

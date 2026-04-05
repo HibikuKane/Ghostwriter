@@ -8,6 +8,7 @@ import { initCharacterList } from './ui/character.controller.js';
 import { initSessionToolbar } from './ui/session.controller.js';
 import { initPersonaUI } from './ui/persona.controller.js';
 import { initNetworkMonitor } from './utils/network.js';
+import { initTooltips } from './utils/tooltip.js';
 import { log } from './utils/logger.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -16,6 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Initialize UI handlers
         initUI();
+
+        // Initialize In-App Tooltips
+        initTooltips();
 
         // Initialize Character List
         initCharacterList();

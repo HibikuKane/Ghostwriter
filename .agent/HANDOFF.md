@@ -8,8 +8,8 @@
 ## 📍 현재 시작점
 
 **날짜**: 2026-04-05  
-**브랜치**: `develop`  
-**Phase**: Phase 2 시작 전 — Phase Harness 설정 완료
+**브랜치**: `develop` (PR #21, #22, #23 머지 대기 중)  
+**Phase**: Phase 2 작업 완료 → PR 머지 후 Phase 3 진입 가능
 
 ---
 
@@ -17,22 +17,35 @@
 
 | 파일 | 변경 내용 |
 |------|-----------|
-| `.ideas/README.md` | 단순 목록 → 라우터 개편 (Phase 위치, 파일별 읽기 가이드, 편집 권한 명시) |
+| `.ideas/README.md` | 단순 목록 → 라우터 개편 |
 | `.agent/README.md` | `.ideas/` vs `docs/` 역할 구분표 + 에이전트 행동 룰 추가 |
-| `CLAUDE.md` | 체크포인트 중심 → 자율 수행 중심으로 재설계 (오케스트레이터 구조 포함) |
-| `.agent/HANDOFF.md` | 신규 생성 (이 파일) |
-| `.agent/TASK_QUEUE.md` | 신규 생성 (Phase 2 태스크 큐 초기화) |
+| `CLAUDE.md` | 체크포인트 중심 → 자율 수행 중심으로 재설계 |
+| `playwright.config.js` | 신규 — Chromium headless, serve 로컬 서버 |
+| `e2e/smoke.test.js` | 신규 — 로그인 화면 렌더링 스모크 테스트 |
+| `src/persona/character.service.js` | details/imageData 필드 + getSystemMessageWithContext() |
+| `src/ui/character.controller.js` | 아바타 업로드 + 상세 항목 편집 UI |
+| `src/config.js` | DEFAULT_MODEL_PARAMS 추가 |
+| `src/llm/llm.service.js` | setModelParams() + generate()에 params 전달 |
+| `src/llm/providers/*.provider.js` | generateResponse(messages, params) 파라미터 지원 |
+| `src/ui/settings.controller.js` | Temperature/MaxTokens/Top-P 슬라이더 UI |
+| `src/utils/tooltip.js` | 신규 — 클릭 기반 툴팁 시스템 |
+| `src/boot.js` | initTooltips() 호출 추가 |
+| `index.html` | 툴팁 ? 버튼 4곳 + 모델 파라미터 섹션 + 캐릭터 에셋 섹션 |
+| `style.css` | 툴팁, 아바타, 상세 항목, 파라미터 슬라이더 스타일 |
 
 ---
 
 ## 🔜 다음 세션 시작점
 
-**할 일**: TASK_QUEUE.md의 첫 번째 태스크(`P2-1`)부터 시작  
-**브랜치 예정**: `release/character-assets`  
-**주의사항**: Phase Harness는 이번 세션에서 설정만 완료. 이니셜라이저 프롬프트는 유저와 다음 세션에서 작성 예정.
+**할 일**: PR #21, #22, #23 머지 확인 후 Phase 3 태스크 잠금 해제 여부 검토  
+**브랜치**: `develop` (머지 후)  
+**주의사항**: Phase 3 태스크들은 각자 의존성 충족 여부 확인 필요 (TASK_QUEUE.md Phase 3+ 섹션 참조)
 
 ---
 
 ## ❓ 미결 사항
 
+- PR #21 (`release/character-assets`) 머지 대기
+- PR #22 (`release/model-params`) 머지 대기
+- PR #23 (`release/in-app-guide`) 머지 대기
 - 이니셜라이저 프롬프트 작성 (자율 개발 루프 시동용) — 유저와 협의 필요
