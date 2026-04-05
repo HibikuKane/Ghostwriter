@@ -44,7 +44,7 @@ export class GeminiProvider extends BaseProvider {
      * @param {Array<{role: string, content: string}>} messages 
      * @returns {Promise<string>}
      */
-    async generateResponse(messages) {
+    async generateResponse(messages, params = {}) {
         try {
             // Separate system message if present
             const systemMessage = messages.find(m => m.role === 'system');
@@ -53,12 +53,15 @@ export class GeminiProvider extends BaseProvider {
             const contents = this._formatMessages(chatMessages);
             const url = `${this.baseUrl}/models/${this.model}:generateContent?key=${this.apiKey}`;
 
+            const generationConfig = {
+                temperature: params.temperature ?? 0.7,
+                maxOutputTokens: params.maxTokens ?? 2048,
+            };
+            if (params.topP != null) generationConfig.topP = params.topP;
+
             const body = {
                 contents: contents,
-                generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 2048, // Increased limit
-                }
+                generationConfig,
             };
 
             // Add system instruction if supported and present

@@ -7,7 +7,7 @@ import { log } from '../utils/logger.js';
 import { characterService } from '../persona/character.service.js';
 import { personaService } from '../persona/persona.service.js';
 import { readStatusFile, updateSettings } from '../drive/drive.service.js';
-import { STORAGE_KEYS } from '../config.js';
+import { STORAGE_KEYS, DEFAULT_MODEL_PARAMS } from '../config.js';
 import { showChat, clearChat } from './chat.controller.js';
 import { hideLoadingScreen, showSettingsButton } from './ui.controller.js';
 import { renderCharacterList } from './character.controller.js';
@@ -31,6 +31,16 @@ const customProviderFields = document.getElementById('custom-provider-fields');
 const customUrlInput = document.getElementById('custom-url');
 const customFormatSelect = document.getElementById('custom-format');
 const customModelInput = document.getElementById('custom-model');
+
+// DOM Elements - Model Parameters
+const paramTemperature = document.getElementById('param-temperature');
+const paramTemperatureValue = document.getElementById('param-temperature-value');
+const paramMaxTokens = document.getElementById('param-max-tokens');
+const paramMaxTokensValue = document.getElementById('param-max-tokens-value');
+const paramTopP = document.getElementById('param-top-p');
+const paramTopPValue = document.getElementById('param-top-p-value');
+const paramTopPEnabled = document.getElementById('param-top-p-enabled');
+const resetParamsBtn = document.getElementById('reset-params-btn');
 
 // DOM Elements - First-Time Setup Modal
 const firstSetupModal = document.getElementById('first-setup-modal');
@@ -65,6 +75,9 @@ export async function initSettings() {
 
     // Event Listeners - First-Time Setup
     if (firstSaveBtn) firstSaveBtn.onclick = saveFirstTimeSettings;
+
+    // Event Listeners - Model Parameters
+    _initModelParamsUI();
 
     // Close on click outside
     window.onclick = (event) => {
@@ -148,6 +161,12 @@ export async function loadSettingsFromDrive() {
                 // Try to fetch models (skip for custom)
                 if (effectiveProvider !== 'custom') {
                     refreshModels(effectiveKey, effectiveModel);
+                }
+
+                // Restore model params
+                if (settings.modelParams) {
+                    llmService.setModelParams(settings.modelParams);
+                    _applyModelParamsToUI(settings.modelParams);
                 }
 
                 log('Settings loaded from Google Drive', 'success');
@@ -299,6 +318,10 @@ async function saveSettings() {
             persona: personaId
         };
 
+        // Collect model params from UI
+        const modelParams = _collectModelParams();
+        settings.modelParams = modelParams;
+
         if (provider === 'custom') {
             // Custom provider settings
             const customUrl = customUrlInput?.value.trim();
@@ -328,6 +351,8 @@ async function saveSettings() {
             settings.model = model;
             llmService.setProvider(provider, key, model);
         }
+
+        llmService.setModelParams(modelParams);
 
         // Save to Google Drive
         await updateSettings(settings);
@@ -461,4 +486,74 @@ async function saveFirstTimeSettings() {
         firstSaveBtn.disabled = false;
         firstSaveBtn.innerText = '저장하고 시작하기';
     }
+}
+
+// ========================================
+// Model Parameters UI
+// ========================================
+
+function _initModelParamsUI() {
+    if (!paramTemperature) return;
+
+    // Sync slider → display value
+    paramTemperature.addEventListener('input', () => {
+        paramTemperatureValue.textContent = Number(paramTemperature.value).toFixed(2);
+    });
+    paramMaxTokens.addEventListener('input', () => {
+        paramMaxTokensValue.textContent = paramMaxTokens.value;
+    });
+    paramTopP.addEventListener('input', () => {
+        paramTopPValue.textContent = paramTopPEnabled.checked
+            ? Number(paramTopP.value).toFixed(2)
+            : '-';
+    });
+    paramTopPEnabled.addEventListener('change', () => {
+        paramTopP.disabled = !paramTopPEnabled.checked;
+        paramTopPValue.textContent = paramTopPEnabled.checked
+            ? Number(paramTopP.value).toFixed(2)
+            : '-';
+    });
+    paramTopP.disabled = true; // disabled until checkbox checked
+
+    // Reset button
+    if (resetParamsBtn) {
+        resetParamsBtn.onclick = () => _applyModelParamsToUI(DEFAULT_MODEL_PARAMS);
+    }
+
+    // Apply current LLM service params to UI on open
+    _applyModelParamsToUI(llmService.modelParams);
+}
+
+/**
+ * Apply a modelParams object to the slider UI.
+ * @param {{ temperature: number, maxTokens: number, topP: number|null }} params
+ */
+function _applyModelParamsToUI(params) {
+    if (!paramTemperature) return;
+
+    paramTemperature.value = params.temperature ?? DEFAULT_MODEL_PARAMS.temperature;
+    paramTemperatureValue.textContent = Number(paramTemperature.value).toFixed(2);
+
+    paramMaxTokens.value = params.maxTokens ?? DEFAULT_MODEL_PARAMS.maxTokens;
+    paramMaxTokensValue.textContent = paramMaxTokens.value;
+
+    const hasTopP = params.topP != null;
+    paramTopPEnabled.checked = hasTopP;
+    paramTopP.disabled = !hasTopP;
+    paramTopP.value = params.topP ?? 1;
+    paramTopPValue.textContent = hasTopP ? Number(paramTopP.value).toFixed(2) : '-';
+}
+
+/**
+ * Collect modelParams from the slider UI.
+ * @returns {{ temperature: number, maxTokens: number, topP: number|null }}
+ */
+function _collectModelParams() {
+    if (!paramTemperature) return { ...DEFAULT_MODEL_PARAMS };
+
+    return {
+        temperature: parseFloat(paramTemperature.value),
+        maxTokens: parseInt(paramMaxTokens.value, 10),
+        topP: paramTopPEnabled.checked ? parseFloat(paramTopP.value) : null,
+    };
 }

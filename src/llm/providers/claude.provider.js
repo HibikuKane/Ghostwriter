@@ -39,7 +39,7 @@ export class ClaudeProvider extends BaseProvider {
      * @param {Array<{role: string, content: string}>} messages 
      * @returns {Promise<string>}
      */
-    async generateResponse(messages) {
+    async generateResponse(messages, params = {}) {
         try {
             // Separate system message (Anthropic uses a dedicated 'system' parameter)
             const systemMessage = messages.find(m => m.role === 'system');
@@ -53,9 +53,10 @@ export class ClaudeProvider extends BaseProvider {
             const body = {
                 model: this.model,
                 messages: chatMessages,
-                max_tokens: 2048,
-                temperature: 0.7
+                max_tokens: params.maxTokens ?? 2048,
+                temperature: params.temperature ?? 0.7,
             };
+            if (params.topP != null) body.top_p = params.topP;
 
             // Add system instruction if present
             if (systemMessage) {

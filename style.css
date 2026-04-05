@@ -1141,3 +1141,71 @@ h1 {
 .offline-banner.hidden {
     transform: translateY(-100%);
 }
+
+/* ========================================
+   Model Parameters Section (Settings Modal)
+======================================== */
+.model-params-section {
+    margin-top: 0.25rem;
+}
+
+.model-params-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.param-group {
+    margin-bottom: 0.9rem;
+}
+
+.param-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.3rem;
+}
+
+.param-label-row label {
+    margin-bottom: 0;
+    font-size: 0.85rem;
+}
+
+.param-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent, #7c6fff);
+    min-width: 2.5rem;
+    text-align: right;
+}
+
+input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent, #7c6fff);
+    cursor: pointer;
+    margin: 0;
+}
+
+input[type="range"]:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.param-enable-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.35rem;
+    cursor: pointer;
+}
+
+.param-enable-label input[type="checkbox"] {
+    width: auto;
+    cursor: pointer;
+}

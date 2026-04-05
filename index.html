@@ -197,6 +197,42 @@
                     </div>
 
 
+                    <!-- Model Parameters -->
+                    <div class="form-divider"></div>
+                    <div class="model-params-section">
+                        <div class="model-params-header">
+                            <span>모델 파라미터</span>
+                            <button type="button" id="reset-params-btn" class="btn text" style="font-size:0.8rem;">↩ 기본값</button>
+                        </div>
+                        <div class="form-group param-group">
+                            <div class="param-label-row">
+                                <label for="param-temperature">Temperature</label>
+                                <span id="param-temperature-value" class="param-value">0.7</span>
+                            </div>
+                            <input type="range" id="param-temperature" min="0" max="2" step="0.05" value="0.7">
+                            <small>낮을수록 일관성↑, 높을수록 창의성↑</small>
+                        </div>
+                        <div class="form-group param-group">
+                            <div class="param-label-row">
+                                <label for="param-max-tokens">Max Tokens</label>
+                                <span id="param-max-tokens-value" class="param-value">2048</span>
+                            </div>
+                            <input type="range" id="param-max-tokens" min="256" max="8192" step="256" value="2048">
+                            <small>응답 최대 길이 (토큰 수)</small>
+                        </div>
+                        <div class="form-group param-group">
+                            <div class="param-label-row">
+                                <label for="param-top-p">Top-P <small class="label-hint">(선택)</small></label>
+                                <span id="param-top-p-value" class="param-value">-</span>
+                            </div>
+                            <input type="range" id="param-top-p" min="0" max="1" step="0.05" value="1">
+                            <label class="param-enable-label">
+                                <input type="checkbox" id="param-top-p-enabled"> Top-P 활성화
+                            </label>
+                            <small>활성화 시 Temperature와 함께 사용 (보통 둘 중 하나만 조정)</small>
+                        </div>
+                    </div>
+
                     <div class="modal-actions">
                         <button id="test-connection-btn" class="btn secondary">Test Connection</button>
                         <button id="save-settings-btn" class="btn primary">Save & Close</button>

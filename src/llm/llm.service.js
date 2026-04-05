@@ -6,10 +6,21 @@ import { GeminiProvider } from './providers/gemini.provider.js';
 import { OpenAIProvider } from './providers/openai.provider.js';
 import { ClaudeProvider } from './providers/claude.provider.js';
 import { log } from '../utils/logger.js';
+import { DEFAULT_MODEL_PARAMS } from '../config.js';
 
 class LLMService {
     constructor() {
         this.provider = null;
+        this.modelParams = { ...DEFAULT_MODEL_PARAMS };
+    }
+
+    /**
+     * Update model generation parameters (temperature, maxTokens, topP).
+     * @param {Partial<typeof DEFAULT_MODEL_PARAMS>} params
+     */
+    setModelParams(params) {
+        this.modelParams = { ...this.modelParams, ...params };
+        log(`Model params updated: temp=${this.modelParams.temperature}, maxTokens=${this.modelParams.maxTokens}, topP=${this.modelParams.topP}`, 'info');
     }
 
     /**
@@ -83,7 +94,7 @@ class LLMService {
 
         const startTime = Date.now();
         try {
-            const response = await this.provider.generateResponse(messages);
+            const response = await this.provider.generateResponse(messages, this.modelParams);
             const duration = Date.now() - startTime;
 
             // Emit Generation End (Mocking token usage for now if not provided)

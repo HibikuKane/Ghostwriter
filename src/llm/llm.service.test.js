@@ -61,6 +61,7 @@ describe('LLMService', () => {
         // Reset state before each test
         llmService.provider = null;
         llmService.listeners = {};
+        llmService.modelParams = { temperature: 0.7, maxTokens: 2048, topP: null };
     });
 
     // ── 초기 상태 ──
@@ -156,6 +157,51 @@ describe('LLMService', () => {
             const eventData = endCallback.mock.calls[0][0];
             expect(eventData.duration).toBeDefined();
             expect(eventData.tokenUsage).toBeDefined();
+        });
+    });
+
+    // ── setModelParams ──
+    describe('setModelParams', () => {
+        it('modelParams 기본값이 올바르다', () => {
+            expect(llmService.modelParams.temperature).toBe(0.7);
+            expect(llmService.modelParams.maxTokens).toBe(2048);
+            expect(llmService.modelParams.topP).toBeNull();
+        });
+
+        it('temperature를 변경한다', () => {
+            llmService.setModelParams({ temperature: 1.2 });
+            expect(llmService.modelParams.temperature).toBe(1.2);
+        });
+
+        it('maxTokens를 변경한다', () => {
+            llmService.setModelParams({ maxTokens: 4096 });
+            expect(llmService.modelParams.maxTokens).toBe(4096);
+        });
+
+        it('topP를 활성화한다', () => {
+            llmService.setModelParams({ topP: 0.9 });
+            expect(llmService.modelParams.topP).toBe(0.9);
+        });
+
+        it('부분 업데이트 시 나머지 값이 유지된다', () => {
+            llmService.setModelParams({ temperature: 1.5 });
+            expect(llmService.modelParams.maxTokens).toBe(2048);
+        });
+    });
+
+    // ── generate — params 전달 ──
+    describe('generate — params 전달', () => {
+        it('generate 호출 시 modelParams가 provider에 전달된다', async () => {
+            llmService.setProvider('gemini', 'test-key', 'gemini-2.0-flash');
+            llmService.setModelParams({ temperature: 1.5, maxTokens: 4096 });
+
+            const generateSpy = vi.spyOn(llmService.provider, 'generateResponse');
+            await llmService.generate([{ role: 'user', content: 'hello' }]);
+
+            expect(generateSpy).toHaveBeenCalledWith(
+                expect.any(Array),
+                expect.objectContaining({ temperature: 1.5, maxTokens: 4096 })
+            );
         });
     });
 

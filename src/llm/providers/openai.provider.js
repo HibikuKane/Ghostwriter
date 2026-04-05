@@ -55,7 +55,7 @@ export class OpenAIProvider extends BaseProvider {
      * @param {Array<{role: string, content: string}>} messages 
      * @returns {Promise<string>}
      */
-    async generateResponse(messages) {
+    async generateResponse(messages, params = {}) {
         try {
             // OpenAI format uses 'assistant' directly (matches our internal format)
             const formattedMessages = messages.map(msg => ({
@@ -63,18 +63,21 @@ export class OpenAIProvider extends BaseProvider {
                 content: msg.content
             }));
 
+            const body = {
+                model: this.model,
+                messages: formattedMessages,
+                temperature: params.temperature ?? 0.7,
+                max_tokens: params.maxTokens ?? 2048,
+            };
+            if (params.topP != null) body.top_p = params.topP;
+
             const response = await fetch(`${this.baseUrl}/chat/completions`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${this.apiKey}`
                 },
-                body: JSON.stringify({
-                    model: this.model,
-                    messages: formattedMessages,
-                    temperature: 0.7,
-                    max_tokens: 2048
-                })
+                body: JSON.stringify(body)
             });
 
             if (!response.ok) {
