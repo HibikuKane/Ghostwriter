@@ -185,6 +185,7 @@
                 <div class="modal-tabs">
                     <button class="tab-btn active" data-tab="settings-tab">설정</button>
                     <button class="tab-btn" data-tab="persona-tab">페르소나</button>
+                    <button class="tab-btn" data-tab="prompt-tab">프롬프트</button>
                 </div>
 
                 <!-- Settings Tab -->
@@ -330,6 +331,41 @@
                         <button id="new-persona-btn" class="btn secondary">새로 만들기</button>
                         <button id="delete-persona-btn" class="btn danger-btn hidden">삭제</button>
                         <button id="save-persona-btn" class="btn primary">저장</button>
+                    </div>
+                </div>
+
+                <!-- Prompt Control Tab -->
+                <div id="prompt-tab" class="tab-panel hidden">
+                    <p class="prompt-tab-desc">LLM에 전달되는 프롬프트 구성 요소의 순서와 활성화 여부를 설정합니다.</p>
+
+                    <div class="prompt-elements-header">
+                        <span>구성 요소</span>
+                        <span class="label-hint" style="font-size:0.8rem;">▲▼ 순서 변경 · 체크박스로 활성화</span>
+                    </div>
+
+                    <ul id="prompt-elements-list" class="prompt-elements-list"></ul>
+
+                    <div class="form-group" style="margin-top:12px;">
+                        <label for="prompt-separator-select">요소 간 구분자</label>
+                        <select id="prompt-separator-select">
+                            <option value="\n\n">빈 줄 (기본)</option>
+                            <option value="\n\n---\n\n">구분선 (---)</option>
+                            <option value="\n">줄바꿈</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <button id="preview-prompt-btn" class="btn secondary" style="width:100%;">프롬프트 미리보기</button>
+                    </div>
+
+                    <div id="prompt-preview" class="prompt-preview hidden">
+                        <div class="prompt-preview-label">미리보기 (현재 캐릭터 기준)</div>
+                        <pre id="prompt-preview-content" class="prompt-preview-content"></pre>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button id="reset-prompt-config-btn" class="btn secondary">↩ 기본값으로</button>
+                        <button id="save-prompt-config-btn" class="btn primary">적용</button>
                     </div>
                 </div>
             </div>

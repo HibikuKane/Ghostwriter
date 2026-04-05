@@ -44,7 +44,7 @@
 | ID | 태스크 | 상태 | 의존성 | 브랜치 |
 |----|--------|------|--------|--------|
 | P3-2 | 프롬프트 제어 UI (#4) | `WAITING_PR` | P2-1 ✅, 채팅 모드 안정화 ✅ | `release/prompt-control` |
-| P3-1 | 롤플레잉 모드 (#1.2) | `IN_PROGRESS` | P2-1 ✅, 채팅 모드 안정화 ✅ | `release/roleplay-mode` |
+| P3-1 | 롤플레잉 모드 (#1.2) | `DONE` | P2-1 ✅, 채팅 모드 안정화 ✅ | `release/roleplay-mode` |
 | P3-3 | 프리셋 시스템 (#10) | `BLOCKED` | P2-2 ✅, P3-2 완료 대기 | — |
 
 ---

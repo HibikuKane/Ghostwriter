@@ -4,6 +4,7 @@
  */
 import { llmService } from '../llm/llm.service.js';
 import { modeService, CHAT_MODES } from '../chat/mode.service.js';
+import { promptConfigService } from '../llm/prompt-config.service.js';
 import { log } from '../utils/logger.js';
 import { chatRepository } from '../memory/chat.repository.js';
 import { characterService } from '../persona/character.service.js';
@@ -167,16 +168,15 @@ async function sendMessage() {
     alternativeResponses = [];
     currentAltIndex = 0;
 
-    // Construct full history with system prompt (+ keyword-triggered details) + persona
-    const personaPrompt = personaService.getPersonaPrompt();
-    const sysMsg = characterService.getSystemMessageWithContext(text);
+    // Construct full history via prompt config (respects element order / enabled state)
+    const sysMsgs = promptConfigService.buildSystemMessages(text, characterService, personaService);
     if (modeService.isRoleplay) {
         const hint = modeService.getRoleplayHint(characterService.activeCharacter?.name);
-        sysMsg.content = (sysMsg.content ? sysMsg.content + '\n\n' : '') + hint;
+        if (sysMsgs.length > 0) sysMsgs[0].content += '\n\n' + hint;
+        else sysMsgs.push({ role: 'system', content: hint });
     }
     const fullHistory = [
-        sysMsg,
-        ...(personaPrompt ? [{ role: 'system', content: personaPrompt }] : []),
+        ...sysMsgs,
         ...messageHistory,
         { role: 'user', content: text }
     ];
@@ -226,17 +226,16 @@ async function reroll() {
     }
 
     const activeCharacterId = characterService.activeCharacterId;
-    const personaPrompt = personaService.getPersonaPrompt();
     // Use the last user message for keyword context during reroll
     const lastUserMsg = [...messageHistory].reverse().find(m => m.role === 'user');
-    const rerollSysMsg = characterService.getSystemMessageWithContext(lastUserMsg?.content || '');
+    const rerollSysMsgs = promptConfigService.buildSystemMessages(lastUserMsg?.content || '', characterService, personaService);
     if (modeService.isRoleplay) {
         const hint = modeService.getRoleplayHint(characterService.activeCharacter?.name);
-        rerollSysMsg.content = (rerollSysMsg.content ? rerollSysMsg.content + '\n\n' : '') + hint;
+        if (rerollSysMsgs.length > 0) rerollSysMsgs[0].content += '\n\n' + hint;
+        else rerollSysMsgs.push({ role: 'system', content: hint });
     }
     const fullHistory = [
-        rerollSysMsg,
-        ...(personaPrompt ? [{ role: 'system', content: personaPrompt }] : []),
+        ...rerollSysMsgs,
         ...messageHistory,
     ];
 
