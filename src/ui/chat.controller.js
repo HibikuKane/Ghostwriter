@@ -127,10 +127,10 @@ async function sendMessage() {
     alternativeResponses = [];
     currentAltIndex = 0;
 
-    // Construct full history with system prompt + persona
+    // Construct full history with system prompt (+ keyword-triggered details) + persona
     const personaPrompt = personaService.getPersonaPrompt();
     const fullHistory = [
-        characterService.getSystemMessage(),
+        characterService.getSystemMessageWithContext(text),
         ...(personaPrompt ? [{ role: 'system', content: personaPrompt }] : []),
         ...messageHistory,
         { role: 'user', content: text }
@@ -182,8 +182,10 @@ async function reroll() {
 
     const activeCharacterId = characterService.activeCharacterId;
     const personaPrompt = personaService.getPersonaPrompt();
+    // Use the last user message for keyword context during reroll
+    const lastUserMsg = [...messageHistory].reverse().find(m => m.role === 'user');
     const fullHistory = [
-        characterService.getSystemMessage(),
+        characterService.getSystemMessageWithContext(lastUserMsg?.content || ''),
         ...(personaPrompt ? [{ role: 'system', content: personaPrompt }] : []),
         ...messageHistory,
     ];
