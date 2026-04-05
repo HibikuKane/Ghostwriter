@@ -1407,3 +1407,191 @@ input[type="range"]:disabled {
 #chat-section.roleplay-active #chat-input {
     border-color: var(--accent);
 }
+
+/* ========================================
+   Prompt Control Tab (Settings Modal)
+======================================== */
+.prompt-tab-desc {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin: 0 0 1rem 0;
+    line-height: 1.5;
+}
+
+.prompt-elements-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.prompt-elements-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.prompt-element-item {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border, #333);
+    border-radius: 6px;
+    padding: 8px 10px;
+}
+
+.pe-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pe-row input[type="checkbox"] {
+    width: auto;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.pe-label {
+    flex: 1;
+    font-size: 0.88rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.pe-order-btns {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.pe-order-btn {
+    background: none;
+    border: 1px solid var(--border, #444);
+    border-radius: 4px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.7rem;
+    line-height: 1;
+    padding: 2px 5px;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.pe-order-btn:hover:not(:disabled) {
+    color: var(--text-main);
+    border-color: var(--accent);
+}
+
+.pe-order-btn:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+}
+
+/* Structural slots (history / current_message) — visually distinct */
+.prompt-element-item.pe-structural {
+    background: rgba(124, 111, 255, 0.07);
+    border-color: rgba(124, 111, 255, 0.25);
+    border-style: dashed;
+}
+
+.pe-label-structural {
+    font-style: italic;
+    color: var(--accent);
+}
+
+.pe-badge {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-left: 4px;
+}
+
+.pe-delete-btn {
+    background: none;
+    border: 1px solid #555;
+    border-radius: 4px;
+    color: #f44336;
+    cursor: pointer;
+    font-size: 0.85rem;
+    line-height: 1;
+    padding: 1px 5px;
+    margin-left: 2px;
+    transition: background 0.15s;
+}
+
+.pe-delete-btn:hover {
+    background: rgba(244, 67, 54, 0.15);
+    border-color: #f44336;
+}
+
+.pe-add-btn {
+    width: 100%;
+    margin: 6px 0 4px;
+    font-size: 0.85rem;
+    color: var(--accent);
+    border: 1px dashed var(--accent);
+    border-radius: 6px;
+    padding: 5px;
+}
+
+.pe-add-btn:hover {
+    background: rgba(124, 111, 255, 0.1);
+}
+
+.pe-content-wrap {
+    margin-top: 6px;
+}
+
+.pe-content-wrap.hidden {
+    display: none;
+}
+
+.pe-label-input {
+    width: 100%;
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-main);
+    padding: 3px 6px;
+}
+
+.pe-content-textarea {
+    width: 100%;
+    font-size: 0.82rem;
+    resize: vertical;
+    min-height: 60px;
+}
+
+.prompt-preview {
+    margin-top: 12px;
+    border: 1px solid var(--border, #333);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.prompt-preview-label {
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border, #333);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    padding: 6px 10px;
+    font-weight: 600;
+}
+
+.prompt-preview-content {
+    font-family: monospace;
+    font-size: 0.78rem;
+    color: var(--text-main);
+    padding: 10px;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 240px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.2);
+}

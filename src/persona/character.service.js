@@ -101,6 +101,31 @@ export class CharacterService {
     }
 
     /**
+     * Get just the keyword-triggered detail text for a given user message.
+     * Returns only the matched detail block, without the base system prompt.
+     * Used by promptConfigService when 'character_details' element is enabled separately.
+     * @param {string} userMessage
+     * @returns {string|null}
+     */
+    getMatchedDetailText(userMessage) {
+        const details = this.activeCharacter?.details || [];
+        if (!details.length || !userMessage) return null;
+
+        const lower = userMessage.toLowerCase();
+        const matched = details.filter(d =>
+            Array.isArray(d.keywords) &&
+            d.keywords.some(kw => kw && lower.includes(kw.toLowerCase()))
+        );
+        if (!matched.length) return null;
+
+        const injected = matched
+            .map(d => `[${d.keywords.join('/')}]\n${d.content}`)
+            .join('\n\n');
+        log(`Keyword triggers matched: ${matched.length} entr${matched.length > 1 ? 'ies' : 'y'}`, 'info');
+        return '[추가 설정]\n' + injected;
+    }
+
+    /**
      * Add a new character to memory.
      * @param {Object} characterData - { name, description, systemPrompt }
      * @returns {Object} The created character with generated ID
