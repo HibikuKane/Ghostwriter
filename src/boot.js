@@ -10,11 +10,16 @@ import { initPersonaUI } from './ui/persona.controller.js';
 import { initPromptControl } from './ui/prompt-control.controller.js';
 import { initNetworkMonitor } from './utils/network.js';
 import { initTooltips } from './utils/tooltip.js';
+import { i18n } from './i18n/i18n.service.js';
 import { log } from './utils/logger.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     try {
         log('System booting...', 'info');
+
+        // Initialize i18n — must run before other UI init so DOM is translated
+        i18n.applyToDOM();
+        _initLangSelect();
 
         // Initialize UI handlers
         initUI();
@@ -52,6 +57,15 @@ document.addEventListener('DOMContentLoaded', () => {
         showBootError(err.message);
     }
 });
+
+function _initLangSelect() {
+    const sel = document.getElementById('lang-select');
+    if (!sel) return;
+    sel.value = i18n.lang;
+    sel.addEventListener('change', () => {
+        i18n.setLang(sel.value);
+    });
+}
 
 /**
  * Display a user-friendly error screen when boot fails.
