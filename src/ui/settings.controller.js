@@ -3,12 +3,14 @@
  * Manages the Settings Modal and API Key persistence.
  */
 import { llmService } from '../llm/llm.service.js';
+import { promptConfigService } from '../llm/prompt-config.service.js';
 import { log } from '../utils/logger.js';
 import { characterService } from '../persona/character.service.js';
 import { personaService } from '../persona/persona.service.js';
 import { readStatusFile, updateSettings } from '../drive/drive.service.js';
 import { STORAGE_KEYS, DEFAULT_MODEL_PARAMS } from '../config.js';
 import { showChat, clearChat } from './chat.controller.js';
+import { syncPromptControlUI } from './prompt-control.controller.js';
 import { hideLoadingScreen, showSettingsButton } from './ui.controller.js';
 import { renderCharacterList } from './character.controller.js';
 import { renderPersonaDropdown } from './persona.controller.js';
@@ -169,6 +171,11 @@ export async function loadSettingsFromDrive() {
                     _applyModelParamsToUI(settings.modelParams);
                 }
 
+                // Restore prompt config
+                if (settings.promptConfig) {
+                    promptConfigService.setConfig(settings.promptConfig);
+                }
+
                 log('Settings loaded from Google Drive', 'success');
 
                 // Load characters from Drive and re-render sidebar
@@ -292,6 +299,7 @@ function onProviderChange(provider) {
 
 function openSettings() {
     settingsModal.classList.remove('hidden');
+    syncPromptControlUI();
 }
 
 function closeSettings() {
@@ -321,6 +329,9 @@ async function saveSettings() {
         // Collect model params from UI
         const modelParams = _collectModelParams();
         settings.modelParams = modelParams;
+
+        // Include current prompt config
+        settings.promptConfig = promptConfigService.config;
 
         if (provider === 'custom') {
             // Custom provider settings

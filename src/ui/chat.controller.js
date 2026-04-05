@@ -3,6 +3,8 @@
  * Manages the Chat Interface.
  */
 import { llmService } from '../llm/llm.service.js';
+import { modeService, CHAT_MODES } from '../chat/mode.service.js';
+import { promptConfigService } from '../llm/prompt-config.service.js';
 import { log } from '../utils/logger.js';
 import { chatRepository } from '../memory/chat.repository.js';
 import { characterService } from '../persona/character.service.js';
@@ -40,6 +42,45 @@ export function initChat() {
     // Initialize session ID if not exists
     if (!currentSessionId) {
         currentSessionId = `chat_${new Date().toISOString().replace(/[:.]/g, '-')}`;
+    }
+
+    _initModeToggle();
+}
+
+/**
+ * Set up mode toggle buttons (Chat / Roleplay).
+ */
+function _initModeToggle() {
+    const modeBtns = document.querySelectorAll('#chat-mode-bar .mode-btn');
+    if (!modeBtns.length) return;
+
+    modeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const newMode = btn.dataset.mode;
+            modeService.setMode(newMode);
+
+            modeBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            _applyModeUI(newMode);
+            log(`Chat mode: ${newMode}`, 'info');
+        });
+    });
+}
+
+/**
+ * Apply visual changes based on the active mode.
+ * @param {string} mode
+ */
+function _applyModeUI(mode) {
+    const isRP = mode === CHAT_MODES.ROLEPLAY;
+    if (chatInput) {
+        chatInput.placeholder = isRP
+            ? '행동(*action*) 또는 대화를 입력하세요...'
+            : 'Type your message...';
+    }
+    if (chatSection) {
+        chatSection.classList.toggle('roleplay-active', isRP);
     }
 }
 
@@ -127,14 +168,16 @@ async function sendMessage() {
     alternativeResponses = [];
     currentAltIndex = 0;
 
-    // Construct full history with system prompt (+ keyword-triggered details) + persona
-    const personaPrompt = personaService.getPersonaPrompt();
-    const fullHistory = [
-        characterService.getSystemMessageWithContext(text),
-        ...(personaPrompt ? [{ role: 'system', content: personaPrompt }] : []),
-        ...messageHistory,
-        { role: 'user', content: text }
-    ];
+    // Build full message pipeline via prompt config (order, enabled state, history position)
+    const fullHistory = promptConfigService.buildMessages(
+        text, messageHistory, characterService, personaService
+    );
+    if (modeService.isRoleplay) {
+        const hint = modeService.getRoleplayHint(characterService.activeCharacter?.name);
+        const firstSys = fullHistory.find(m => m.role === 'system');
+        if (firstSys) firstSys.content += '\n\n' + hint;
+        else fullHistory.unshift({ role: 'system', content: hint });
+    }
 
     messageHistory.push({ role: 'user', content: text });
     chatInput.value = '';
@@ -181,14 +224,18 @@ async function reroll() {
     }
 
     const activeCharacterId = characterService.activeCharacterId;
-    const personaPrompt = personaService.getPersonaPrompt();
-    // Use the last user message for keyword context during reroll
+    // Use the last user message for keyword context; history already ends with it
     const lastUserMsg = [...messageHistory].reverse().find(m => m.role === 'user');
-    const fullHistory = [
-        characterService.getSystemMessageWithContext(lastUserMsg?.content || ''),
-        ...(personaPrompt ? [{ role: 'system', content: personaPrompt }] : []),
-        ...messageHistory,
-    ];
+    const fullHistory = promptConfigService.buildMessages(
+        lastUserMsg?.content || '', messageHistory, characterService, personaService,
+        { skipCurrentMessage: true }
+    );
+    if (modeService.isRoleplay) {
+        const hint = modeService.getRoleplayHint(characterService.activeCharacter?.name);
+        const firstSys = fullHistory.find(m => m.role === 'system');
+        if (firstSys) firstSys.content += '\n\n' + hint;
+        else fullHistory.unshift({ role: 'system', content: hint });
+    }
 
     log('Rerolling last assistant response', 'info');
     await _generateAndAppend(fullHistory, activeCharacterId);
