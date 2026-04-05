@@ -74,13 +74,15 @@ function _initModeToggle() {
  */
 function _applyModeUI(mode) {
     const isRP = mode === CHAT_MODES.ROLEPLAY;
+    const isNV = mode === CHAT_MODES.NOVELIST;
     if (chatInput) {
-        chatInput.placeholder = isRP
-            ? '행동(*action*) 또는 대화를 입력하세요...'
-            : 'Type your message...';
+        if (isRP) chatInput.placeholder = '행동(*action*) 또는 대화를 입력하세요...';
+        else if (isNV) chatInput.placeholder = '다음 플롯이나 장면 방향을 입력하세요...';
+        else chatInput.placeholder = 'Type your message...';
     }
     if (chatSection) {
         chatSection.classList.toggle('roleplay-active', isRP);
+        chatSection.classList.toggle('novelist-active', isNV);
     }
 }
 
@@ -177,6 +179,11 @@ async function sendMessage() {
         const firstSys = fullHistory.find(m => m.role === 'system');
         if (firstSys) firstSys.content += '\n\n' + hint;
         else fullHistory.unshift({ role: 'system', content: hint });
+    } else if (modeService.isNovelist) {
+        const hint = modeService.getNovelistHint(characterService.activeCharacter?.name);
+        const firstSys = fullHistory.find(m => m.role === 'system');
+        if (firstSys) firstSys.content += '\n\n' + hint;
+        else fullHistory.unshift({ role: 'system', content: hint });
     }
 
     messageHistory.push({ role: 'user', content: text });
@@ -232,6 +239,11 @@ async function reroll() {
     );
     if (modeService.isRoleplay) {
         const hint = modeService.getRoleplayHint(characterService.activeCharacter?.name);
+        const firstSys = fullHistory.find(m => m.role === 'system');
+        if (firstSys) firstSys.content += '\n\n' + hint;
+        else fullHistory.unshift({ role: 'system', content: hint });
+    } else if (modeService.isNovelist) {
+        const hint = modeService.getNovelistHint(characterService.activeCharacter?.name);
         const firstSys = fullHistory.find(m => m.role === 'system');
         if (firstSys) firstSys.content += '\n\n' + hint;
         else fullHistory.unshift({ role: 'system', content: hint });

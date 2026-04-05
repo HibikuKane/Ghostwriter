@@ -65,15 +65,54 @@ describe('ModeService', () => {
         expect(hint).toContain('롤플레잉');
         expect(hint).toContain('페르소나');
     });
-});
 
-describe('CHAT_MODES 상수', () => {
-    it('CHAT과 ROLEPLAY 값이 정의되어 있다', () => {
-        expect(CHAT_MODES.CHAT).toBeDefined();
-        expect(CHAT_MODES.ROLEPLAY).toBeDefined();
+    // ── Novelist mode ────────────────────────────────────────────────────────
+
+    it('NOVELIST로 전환하면 isNovelist가 true가 된다', () => {
+        svc.setMode(CHAT_MODES.NOVELIST);
+        expect(svc.mode).toBe(CHAT_MODES.NOVELIST);
+        expect(svc.isNovelist).toBe(true);
+        expect(svc.isRoleplay).toBe(false);
     });
 
-    it('CHAT과 ROLEPLAY는 서로 다른 값이다', () => {
+    it('다시 CHAT으로 전환하면 isNovelist가 false가 된다', () => {
+        svc.setMode(CHAT_MODES.NOVELIST);
+        svc.setMode(CHAT_MODES.CHAT);
+        expect(svc.isNovelist).toBe(false);
+    });
+
+    it('getNovelistHint에 캐릭터 이름이 포함된다', () => {
+        const hint = svc.getNovelistHint('리나');
+        expect(hint).toContain('리나');
+        expect(hint).toContain('[소설가 모드]');
+    });
+
+    it('getNovelistHint — 이름 없이 호출 시 기본값 사용', () => {
+        const hint = svc.getNovelistHint();
+        expect(hint).toContain('캐릭터');
+    });
+
+    it('getNovelistHint 결과는 여러 줄로 구성된다', () => {
+        const hint = svc.getNovelistHint('테스트');
+        expect(hint.split('\n').length).toBeGreaterThan(3);
+    });
+
+    it('getNovelistHint에 소설 관련 지시문이 포함된다', () => {
+        const hint = svc.getNovelistHint('Alice');
+        expect(hint).toContain('소설');
+    });
+}); // end ModeService
+
+describe('CHAT_MODES 상수', () => {
+    it('CHAT, ROLEPLAY, NOVELIST 값이 정의되어 있다', () => {
+        expect(CHAT_MODES.CHAT).toBeDefined();
+        expect(CHAT_MODES.ROLEPLAY).toBeDefined();
+        expect(CHAT_MODES.NOVELIST).toBeDefined();
+    });
+
+    it('세 모드는 모두 서로 다른 값이다', () => {
         expect(CHAT_MODES.CHAT).not.toBe(CHAT_MODES.ROLEPLAY);
+        expect(CHAT_MODES.CHAT).not.toBe(CHAT_MODES.NOVELIST);
+        expect(CHAT_MODES.ROLEPLAY).not.toBe(CHAT_MODES.NOVELIST);
     });
 });

@@ -1408,6 +1408,15 @@ input[type="range"]:disabled {
     border-color: var(--accent);
 }
 
+/* Novelist mode — warm amber tint */
+#chat-section.novelist-active .chat-input-area {
+    border-top: 2px solid #f0a030;
+}
+
+#chat-section.novelist-active #chat-input {
+    border-color: #f0a030;
+}
+
 /* ========================================
    Prompt Control Tab (Settings Modal)
 ======================================== */
