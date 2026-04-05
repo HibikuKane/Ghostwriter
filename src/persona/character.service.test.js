@@ -176,4 +176,89 @@ describe('CharacterService', () => {
             expect(msg.content).toContain('Shakespeare');
         });
     });
+
+    // ── addCharacter (details + imageData) ──
+    describe('addCharacter — details/imageData 필드', () => {
+        it('details 없이 생성 시 빈 배열이 기본값이다', () => {
+            const c = service.addCharacter({ name: 'NoDetails' });
+            expect(c.details).toEqual([]);
+        });
+
+        it('imageData 없이 생성 시 null이 기본값이다', () => {
+            const c = service.addCharacter({ name: 'NoImage' });
+            expect(c.imageData).toBeNull();
+        });
+
+        it('details를 전달하면 그대로 저장된다', () => {
+            const details = [{ id: 'x1', keywords: ['호무라'], content: '아케미 호무라 설정' }];
+            const c = service.addCharacter({ name: 'WithDetails', details });
+            expect(c.details).toEqual(details);
+        });
+    });
+
+    // ── updateCharacter (details + imageData) ──
+    describe('updateCharacter — details/imageData 필드', () => {
+        it('details 업데이트가 반영된다', () => {
+            const details = [{ id: 'x2', keywords: ['아케미'], content: '추가 설정' }];
+            service.updateCharacter('ghostwriter', { details });
+            expect(service.activeCharacter.details).toEqual(details);
+        });
+
+        it('imageData 업데이트가 반영된다', () => {
+            service.updateCharacter('ghostwriter', { imageData: 'data:image/png;base64,abc' });
+            expect(service.activeCharacter.imageData).toBe('data:image/png;base64,abc');
+        });
+    });
+
+    // ── getSystemMessageWithContext ──
+    describe('getSystemMessageWithContext', () => {
+        let charWithDetails;
+
+        beforeEach(() => {
+            charWithDetails = service.addCharacter({
+                name: '호무라 캐릭터',
+                systemPrompt: '기본 프롬프트입니다.',
+                details: [
+                    { id: 'd1', keywords: ['호무라', '아케미'], content: '아케미 호무라 세부 설정' },
+                    { id: 'd2', keywords: ['마법소녀'], content: '마법소녀 관련 설정' },
+                ]
+            });
+            service.setActiveCharacter(charWithDetails.id);
+        });
+
+        it('키워드가 없는 메시지에는 기본 프롬프트만 반환한다', () => {
+            const msg = service.getSystemMessageWithContext('오늘 날씨가 좋네요');
+            expect(msg.role).toBe('system');
+            expect(msg.content).toBe('기본 프롬프트입니다.');
+        });
+
+        it('키워드 매칭 시 해당 detail 내용이 주입된다', () => {
+            const msg = service.getSystemMessageWithContext('호무라에 대해 알려줘');
+            expect(msg.content).toContain('기본 프롬프트입니다.');
+            expect(msg.content).toContain('아케미 호무라 세부 설정');
+            expect(msg.content).toContain('[추가 설정]');
+        });
+
+        it('키워드 매칭은 대소문자 무시(case-insensitive)다', () => {
+            const msg = service.getSystemMessageWithContext('МАГИ PUELLA 마법소녀에 대해');
+            expect(msg.content).toContain('마법소녀 관련 설정');
+        });
+
+        it('여러 항목이 동시에 매칭되면 모두 주입된다', () => {
+            const msg = service.getSystemMessageWithContext('호무라와 마법소녀');
+            expect(msg.content).toContain('아케미 호무라 세부 설정');
+            expect(msg.content).toContain('마법소녀 관련 설정');
+        });
+
+        it('details가 없는 캐릭터는 기본 프롬프트만 반환한다', () => {
+            service.setActiveCharacter('ghostwriter');
+            const msg = service.getSystemMessageWithContext('호무라와 마법소녀');
+            expect(msg.content).not.toContain('[추가 설정]');
+        });
+
+        it('빈 메시지에는 기본 프롬프트만 반환한다', () => {
+            const msg = service.getSystemMessageWithContext('');
+            expect(msg.content).toBe('기본 프롬프트입니다.');
+        });
+    });
 });

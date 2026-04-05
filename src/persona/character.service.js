@@ -11,19 +11,25 @@ const DEFAULT_CHARACTERS = [
         id: 'ghostwriter',
         name: 'Ghostwriter',
         description: 'Your default AI writing partner.',
-        systemPrompt: 'You are Ghostwriter, an expert AI writing assistant. You help the user with creative writing, coding, and brainstorming. You are helpful, concise, and professional.'
+        systemPrompt: 'You are Ghostwriter, an expert AI writing assistant. You help the user with creative writing, coding, and brainstorming. You are helpful, concise, and professional.',
+        details: [],
+        imageData: null
     },
     {
         id: 'erika',
         name: 'Erika',
         description: 'A strict and efficient code reviewer.',
-        systemPrompt: 'You are Erika, a senior software engineer. You are strict, efficient, and focus on clean code and best practices. You do not tolerate inefficient code. You speak in a direct and professional manner.'
+        systemPrompt: 'You are Erika, a senior software engineer. You are strict, efficient, and focus on clean code and best practices. You do not tolerate inefficient code. You speak in a direct and professional manner.',
+        details: [],
+        imageData: null
     },
     {
         id: 'shakespeare',
         name: 'William',
         description: 'A poetic and dramatic bard.',
-        systemPrompt: 'You are William Shakespeare. You speak in Early Modern English. You are dramatic, poetic, and love using metaphors. You help the user write plays and sonnets.'
+        systemPrompt: 'You are William Shakespeare. You speak in Early Modern English. You are dramatic, poetic, and love using metaphors. You help the user write plays and sonnets.',
+        details: [],
+        imageData: null
     }
 ];
 
@@ -66,6 +72,35 @@ export class CharacterService {
     }
 
     /**
+     * Build the system message, injecting detail entries whose keywords
+     * appear in the latest user message.
+     * @param {string} userMessage - The latest user input to match against
+     * @returns {{ role: 'system', content: string }}
+     */
+    getSystemMessageWithContext(userMessage) {
+        const character = this.activeCharacter;
+        let content = character.systemPrompt || '';
+
+        const details = character.details || [];
+        if (details.length > 0 && userMessage) {
+            const lower = userMessage.toLowerCase();
+            const matched = details.filter(d =>
+                Array.isArray(d.keywords) &&
+                d.keywords.some(kw => kw && lower.includes(kw.toLowerCase()))
+            );
+            if (matched.length > 0) {
+                const injected = matched
+                    .map(d => `[${d.keywords.join('/')}]\n${d.content}`)
+                    .join('\n\n');
+                content += '\n\n[추가 설정]\n' + injected;
+                log(`Keyword triggers matched: ${matched.length} entr${matched.length > 1 ? 'ies' : 'y'}`, 'info');
+            }
+        }
+
+        return { role: 'system', content };
+    }
+
+    /**
      * Add a new character to memory.
      * @param {Object} characterData - { name, description, systemPrompt }
      * @returns {Object} The created character with generated ID
@@ -75,7 +110,9 @@ export class CharacterService {
             id: crypto.randomUUID(),
             name: characterData.name,
             description: characterData.description || '',
-            systemPrompt: characterData.systemPrompt || ''
+            systemPrompt: characterData.systemPrompt || '',
+            details: characterData.details || [],
+            imageData: characterData.imageData || null
         };
         this.characters.push(character);
         log(`Character added: ${character.name} (${character.id})`, 'info');
@@ -97,6 +134,8 @@ export class CharacterService {
         if (data.name !== undefined) character.name = data.name;
         if (data.description !== undefined) character.description = data.description;
         if (data.systemPrompt !== undefined) character.systemPrompt = data.systemPrompt;
+        if (data.details !== undefined) character.details = data.details;
+        if (data.imageData !== undefined) character.imageData = data.imageData;
         log(`Character updated: ${character.name}`, 'info');
         return character;
     }

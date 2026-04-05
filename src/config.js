@@ -24,5 +24,12 @@ export const STORAGE_KEYS = {
     PROVIDER: 'ghostwriter_provider',
     MODEL: 'ghostwriter_model',
     CHARACTER: 'ghostwriter_character',
-    PERSONA: 'ghostwriter_persona'
+    PERSONA: 'ghostwriter_persona',
+    MODEL_PARAMS: 'ghostwriter_model_params'
+};
+
+export const DEFAULT_MODEL_PARAMS = {
+    temperature: 0.7,
+    maxTokens: 2048,
+    topP: null  // null = use API default
 };

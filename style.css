@@ -47,6 +47,82 @@ body {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
+/* ========================================
+   In-App Tooltip System
+======================================== */
+.tooltip-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.tooltip-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    font-weight: 700;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    vertical-align: middle;
+    margin-left: 0.3rem;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+}
+
+.tooltip-btn:hover {
+    background: rgba(255, 255, 255, 0.22);
+    color: var(--text-main);
+}
+
+.tooltip-popup {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 200px;
+    max-width: 280px;
+    background: var(--card-bg, #2a2a2a);
+    border: 1px solid var(--border, #444);
+    border-radius: 8px;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--text-main);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    pointer-events: auto;
+    white-space: normal;
+}
+
+/* Arrow */
+.tooltip-popup::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-bottom-color: var(--border, #444);
+}
+
+.tooltip-popup::after {
+    content: '';
+    position: absolute;
+    bottom: calc(100% - 1px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-bottom-color: var(--card-bg, #2a2a2a);
+}
+
 .sidebar-header {
     display: flex;
     justify-content: space-between;
@@ -140,6 +216,83 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.character-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-bottom: 0.15rem;
+}
+
+/* Character Modal — image preview */
+.char-image-preview {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid var(--border);
+    margin-bottom: 0.5rem;
+}
+
+.char-image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Character Modal — detail entries */
+.detail-entry {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.detail-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.detail-remove-btn {
+    font-size: 0.75rem;
+    padding: 0.1rem 0.4rem;
+    color: var(--text-muted);
+}
+
+.detail-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.1rem;
+    display: block;
+}
+
+.detail-keywords-input,
+.detail-content-input {
+    width: 100%;
+    background: var(--input-bg, rgba(255,255,255,0.07));
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-main);
+    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
+    box-sizing: border-box;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.detail-content-input {
+    min-height: 60px;
 }
 
 /* Chat section fills remaining space */
@@ -1140,4 +1293,72 @@ h1 {
 
 .offline-banner.hidden {
     transform: translateY(-100%);
+}
+
+/* ========================================
+   Model Parameters Section (Settings Modal)
+======================================== */
+.model-params-section {
+    margin-top: 0.25rem;
+}
+
+.model-params-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.param-group {
+    margin-bottom: 0.9rem;
+}
+
+.param-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.3rem;
+}
+
+.param-label-row label {
+    margin-bottom: 0;
+    font-size: 0.85rem;
+}
+
+.param-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent, #7c6fff);
+    min-width: 2.5rem;
+    text-align: right;
+}
+
+input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent, #7c6fff);
+    cursor: pointer;
+    margin: 0;
+}
+
+input[type="range"]:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.param-enable-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.35rem;
+    cursor: pointer;
+}
+
+.param-enable-label input[type="checkbox"] {
+    width: auto;
+    cursor: pointer;
 }

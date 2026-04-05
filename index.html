@@ -54,6 +54,14 @@
                     <aside id="character-list-sidebar" class="sidebar">
                         <div class="sidebar-header">
                             <h3>캐릭터</h3>
+                            <span class="tooltip-wrap">
+                                <button class="tooltip-btn" type="button" aria-label="캐릭터 도움말">?</button>
+                                <div class="tooltip-popup hidden" role="tooltip">
+                                    AI의 성격·역할·말투를 정의하는 프로필입니다.<br>
+                                    캐릭터를 선택하면 해당 성격으로 대화가 시작됩니다.<br>
+                                    ＋ 버튼으로 직접 만들 수 있습니다.
+                                </div>
+                            </span>
                             <button id="add-character-btn" class="btn text" title="새 캐릭터 추가">＋</button>
                         </div>
                         <ul id="character-list">
@@ -64,6 +72,14 @@
                     <!-- Chat Section -->
                     <div id="chat-section" class="card">
                         <div id="session-toolbar">
+                            <span class="tooltip-wrap">
+                                <button class="tooltip-btn" type="button" aria-label="세션 도움말">?</button>
+                                <div class="tooltip-popup hidden" role="tooltip">
+                                    대화 기록을 세션으로 저장합니다.<br>
+                                    캐릭터별로 여러 세션을 만들 수 있으며,<br>
+                                    전환 시 이전 대화가 자동 복원됩니다.
+                                </div>
+                            </span>
                             <select id="session-select">
                                 <option value="">새 세션</option>
                             </select>
@@ -100,6 +116,25 @@
                 <div class="form-group">
                     <label for="char-system-prompt">시스템 프롬프트</label>
                     <textarea id="char-system-prompt" placeholder="이 캐릭터의 성격과 역할을 설명하세요" rows="5"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>아바타 이미지 <small class="label-hint">(선택, 사이드바 표시용)</small></label>
+                    <div id="char-image-preview" class="char-image-preview hidden"></div>
+                    <input type="file" id="char-image-input" accept="image/*" style="display:none">
+                    <div style="display:flex; gap:0.5rem; margin-top:0.4rem;">
+                        <button type="button" id="char-image-upload-btn" class="btn secondary">📷 이미지 선택</button>
+                        <button type="button" id="char-image-clear-btn" class="btn text hidden">✕ 삭제</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                        <label style="margin-bottom:0;">세부설정집 <small class="label-hint">(키워드 트리거)</small></label>
+                        <button type="button" id="add-detail-btn" class="btn text" style="font-size:0.85rem;">+ 항목 추가</button>
+                    </div>
+                    <div id="detail-entries-list"></div>
+                    <small style="color:var(--text-muted); display:block; margin-top:0.4rem;">
+                        키워드가 대화에 등장하면 해당 내용이 시스템 프롬프트에 자동 주입됩니다.
+                    </small>
                 </div>
                 <div class="modal-actions">
                     <button id="delete-character-btn" class="btn danger-btn hidden">삭제</button>
@@ -150,7 +185,18 @@
                 <!-- Settings Tab -->
                 <div id="settings-tab" class="tab-panel">
                     <div class="form-group">
-                        <label for="provider-select">LLM Provider</label>
+                        <label for="provider-select">LLM Provider
+                            <span class="tooltip-wrap">
+                                <button class="tooltip-btn" type="button" aria-label="프로바이더 도움말">?</button>
+                                <div class="tooltip-popup hidden" role="tooltip">
+                                    AI 응답을 생성할 서비스를 선택합니다.<br>
+                                    <b>Gemini</b>: Google AI (무료 티어 있음)<br>
+                                    <b>OpenAI</b>: ChatGPT 계열 (유료)<br>
+                                    <b>Claude</b>: Anthropic (유료)<br>
+                                    <b>커스텀</b>: 로컬 LLM / 호환 API 직접 연결
+                                </div>
+                            </span>
+                        </label>
                         <select id="provider-select">
                             <option value="gemini">Google Gemini</option>
                             <option value="openai">OpenAI</option>
@@ -160,7 +206,16 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="api-key-input">API Key</label>
+                        <label for="api-key-input">API Key
+                            <span class="tooltip-wrap">
+                                <button class="tooltip-btn" type="button" aria-label="API Key 도움말">?</button>
+                                <div class="tooltip-popup hidden" role="tooltip">
+                                    각 LLM 서비스에서 발급받는 인증 키입니다.<br>
+                                    Google Drive에 저장되며 기기 간 자동 동기화됩니다.<br>
+                                    공용 PC에서는 반드시 로그아웃해주세요.
+                                </div>
+                            </span>
+                        </label>
                         <input type="password" id="api-key-input" placeholder="Enter your API Key">
                         <small id="api-key-hint">Stored in Google Drive. Syncs across all your devices.</small>
                     </div>
@@ -196,6 +251,42 @@
                         <small style="display:block; margin-top:5px;">Enter API Key to fetch available models.</small>
                     </div>
 
+
+                    <!-- Model Parameters -->
+                    <div class="form-divider"></div>
+                    <div class="model-params-section">
+                        <div class="model-params-header">
+                            <span>모델 파라미터</span>
+                            <button type="button" id="reset-params-btn" class="btn text" style="font-size:0.8rem;">↩ 기본값</button>
+                        </div>
+                        <div class="form-group param-group">
+                            <div class="param-label-row">
+                                <label for="param-temperature">Temperature</label>
+                                <span id="param-temperature-value" class="param-value">0.7</span>
+                            </div>
+                            <input type="range" id="param-temperature" min="0" max="2" step="0.05" value="0.7">
+                            <small>낮을수록 일관성↑, 높을수록 창의성↑</small>
+                        </div>
+                        <div class="form-group param-group">
+                            <div class="param-label-row">
+                                <label for="param-max-tokens">Max Tokens</label>
+                                <span id="param-max-tokens-value" class="param-value">2048</span>
+                            </div>
+                            <input type="range" id="param-max-tokens" min="256" max="8192" step="256" value="2048">
+                            <small>응답 최대 길이 (토큰 수)</small>
+                        </div>
+                        <div class="form-group param-group">
+                            <div class="param-label-row">
+                                <label for="param-top-p">Top-P <small class="label-hint">(선택)</small></label>
+                                <span id="param-top-p-value" class="param-value">-</span>
+                            </div>
+                            <input type="range" id="param-top-p" min="0" max="1" step="0.05" value="1">
+                            <label class="param-enable-label">
+                                <input type="checkbox" id="param-top-p-enabled"> Top-P 활성화
+                            </label>
+                            <small>활성화 시 Temperature와 함께 사용 (보통 둘 중 하나만 조정)</small>
+                        </div>
+                    </div>
 
                     <div class="modal-actions">
                         <button id="test-connection-btn" class="btn secondary">Test Connection</button>
