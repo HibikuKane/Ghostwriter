@@ -633,6 +633,76 @@ h1 {
     align-items: flex-start;
 }
 
+/* ── Message Edit / Delete Actions ──────────────────────────────────────── */
+
+.message {
+    position: relative;
+}
+
+.msg-actions {
+    display: none;
+    gap: 2px;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+}
+
+.message:hover .msg-actions {
+    display: flex;
+}
+
+.msg-action-btn {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    padding: 1px 5px;
+    cursor: pointer;
+    line-height: 1.4;
+    transition: background 0.15s;
+}
+
+.msg-action-btn:hover {
+    background: rgba(255,255,255,0.18);
+    color: var(--text-main);
+}
+
+.msg-delete-btn:hover {
+    color: #f06060;
+}
+
+.msg-edit-textarea {
+    width: 100%;
+    font-size: 0.9rem;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--accent);
+    background: rgba(0,0,0,0.25);
+    color: var(--text-main);
+    resize: vertical;
+    margin-top: 6px;
+    box-sizing: border-box;
+}
+
+.msg-edit-bar {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.msg-edit-confirm {
+    font-size: 0.82rem;
+    padding: 4px 10px;
+}
+
+.msg-edit-cancel {
+    font-size: 0.82rem;
+    padding: 4px 8px;
+}
+
+/* ── Reroll Actions ─────────────────────────────────────────────────────── */
+
 .reroll-actions {
     display: flex;
     align-items: center;

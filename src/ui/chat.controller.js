@@ -28,6 +28,10 @@ let isGenerating = false;
 let alternativeResponses = [];
 let currentAltIndex = 0;
 
+// Stable ID per history entry — parallel to messageHistory.
+// Used by delete/edit operations to find the correct history index.
+let messageIds = [];
+
 export function initChat() {
     if (sendBtn) sendBtn.onclick = sendMessage;
     if (chatInput) {
@@ -117,6 +121,7 @@ export function setCurrentSessionId(id) {
  */
 export function loadSessionMessages(messages, sessionId) {
     messageHistory = messages || [];
+    messageIds = messageHistory.map(() => crypto.randomUUID());
     currentSessionId = sessionId;
     lastAssistantMsgEl = null;
     alternativeResponses = [];
@@ -125,8 +130,8 @@ export function loadSessionMessages(messages, sessionId) {
     // Clear and re-render chat history
     if (chatHistory) {
         chatHistory.innerHTML = '';
-        messageHistory.forEach(msg => {
-            addMessageToUI(msg.role, msg.content);
+        messageHistory.forEach((msg, i) => {
+            addMessageToUI(msg.role, msg.content, messageIds[i]);
         });
     }
 
@@ -138,6 +143,7 @@ export function loadSessionMessages(messages, sessionId) {
  */
 export function clearChat() {
     messageHistory = [];
+    messageIds = [];
     currentSessionId = `chat_${new Date().toISOString().replace(/[:.]/g, '-')}`;
     lastAssistantMsgEl = null;
     alternativeResponses = [];
@@ -164,7 +170,8 @@ async function sendMessage() {
     const activeCharacterId = characterService.activeCharacterId;
 
     // 1. Add User Message & reset reroll state for new message slot
-    addMessageToUI('user', text);
+    const userMsgId = crypto.randomUUID();
+    addMessageToUI('user', text, userMsgId);
     alternativeResponses = [];
     currentAltIndex = 0;
 
@@ -180,6 +187,7 @@ async function sendMessage() {
     }
 
     messageHistory.push({ role: 'user', content: text });
+    messageIds.push(userMsgId);
     chatInput.value = '';
 
     // Auto-save user message (with characterId)
@@ -297,8 +305,10 @@ async function _generateAndAppend(fullHistory, activeCharacterId) {
         alternativeResponses.push(responseText);
         currentAltIndex = alternativeResponses.length - 1;
 
-        addMessageToUI('assistant', responseText);
+        const assistantMsgId = crypto.randomUUID();
+        addMessageToUI('assistant', responseText, assistantMsgId);
         messageHistory.push({ role: 'assistant', content: responseText });
+        messageIds.push(assistantMsgId);
 
         const savedId = await chatRepository.saveSession(currentSessionId, messageHistory, activeCharacterId);
         if (savedId) currentSessionId = savedId;
@@ -312,7 +322,7 @@ async function _generateAndAppend(fullHistory, activeCharacterId) {
     }
 }
 
-function addMessageToUI(role, text) {
+function addMessageToUI(role, text, msgId) {
     // Remove reroll actions from the previous last assistant message
     if (role === 'assistant' && lastAssistantMsgEl) {
         const prevActions = lastAssistantMsgEl.querySelector('.reroll-actions');
@@ -322,6 +332,7 @@ function addMessageToUI(role, text) {
     const div = document.createElement('div');
     div.id = 'msg-' + Date.now();
     div.className = `message ${role}`;
+    if (msgId) div.dataset.msgid = msgId;
 
     const bubble = document.createElement('div');
     bubble.className = 'bubble';
@@ -335,17 +346,166 @@ function addMessageToUI(role, text) {
         }
 
         div.appendChild(bubble);
+        div.appendChild(_buildMsgActions(role, div));
         div.appendChild(_buildRerollActions());
         lastAssistantMsgEl = div;
     } else {
         bubble.innerText = text;
         div.appendChild(bubble);
+        div.appendChild(_buildMsgActions(role, div));
     }
 
     chatHistory.appendChild(div);
     chatHistory.scrollTop = chatHistory.scrollHeight;
 
     return div.id;
+}
+
+/**
+ * Build the delete / edit action buttons for a message.
+ */
+function _buildMsgActions(role, msgEl) {
+    const bar = document.createElement('div');
+    bar.className = 'msg-actions';
+
+    if (role === 'user') {
+        const editBtn = document.createElement('button');
+        editBtn.className = 'msg-action-btn';
+        editBtn.title = '메시지 수정 후 재생성';
+        editBtn.textContent = '✏';
+        editBtn.onclick = () => _startEdit(msgEl);
+        bar.appendChild(editBtn);
+    }
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'msg-action-btn msg-delete-btn';
+    delBtn.title = '메시지 삭제';
+    delBtn.textContent = '×';
+    delBtn.onclick = () => _deleteMessage(msgEl);
+    bar.appendChild(delBtn);
+
+    return bar;
+}
+
+/**
+ * Delete a single message from history and DOM.
+ */
+async function _deleteMessage(msgEl) {
+    const msgId = msgEl.dataset.msgid;
+    if (!msgId) return;
+    const idx = messageIds.indexOf(msgId);
+    if (idx === -1) return;
+
+    messageHistory.splice(idx, 1);
+    messageIds.splice(idx, 1);
+    msgEl.remove();
+
+    // If deleted msg was the last assistant msg, update lastAssistantMsgEl
+    if (msgEl === lastAssistantMsgEl) {
+        const allMsgs = chatHistory.querySelectorAll('.message.assistant:not(.loading)');
+        lastAssistantMsgEl = allMsgs[allMsgs.length - 1] || null;
+        alternativeResponses = [];
+        currentAltIndex = 0;
+    }
+
+    const activeCharacterId = characterService.activeCharacterId;
+    const savedId = await chatRepository.saveSession(currentSessionId, messageHistory, activeCharacterId);
+    if (savedId) currentSessionId = savedId;
+
+    log(`Message deleted (idx ${idx})`, 'info');
+}
+
+/**
+ * Enter inline edit mode for a user message.
+ */
+function _startEdit(msgEl) {
+    if (isGenerating) return;
+    const bubble = msgEl.querySelector('.bubble');
+    if (!bubble) return;
+
+    const originalText = bubble.innerText;
+
+    // Build inline edit UI
+    const textarea = document.createElement('textarea');
+    textarea.className = 'msg-edit-textarea';
+    textarea.value = originalText;
+    textarea.rows = Math.max(2, originalText.split('\n').length);
+
+    const confirmBtn = document.createElement('button');
+    confirmBtn.className = 'btn primary msg-edit-confirm';
+    confirmBtn.textContent = '수정 & 재생성';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn text msg-edit-cancel';
+    cancelBtn.textContent = '취소';
+
+    const editBar = document.createElement('div');
+    editBar.className = 'msg-edit-bar';
+    editBar.append(confirmBtn, cancelBtn);
+
+    bubble.classList.add('hidden');
+    msgEl.querySelector('.msg-actions')?.classList.add('hidden');
+    msgEl.appendChild(textarea);
+    msgEl.appendChild(editBar);
+    textarea.focus();
+
+    const cleanup = () => {
+        textarea.remove();
+        editBar.remove();
+        bubble.classList.remove('hidden');
+        msgEl.querySelector('.msg-actions')?.classList.remove('hidden');
+    };
+
+    cancelBtn.onclick = cleanup;
+
+    confirmBtn.onclick = async () => {
+        const newText = textarea.value.trim();
+        if (!newText) return;
+        cleanup();
+
+        const msgId = msgEl.dataset.msgid;
+        const idx = msgId ? messageIds.indexOf(msgId) : -1;
+        if (idx === -1) return;
+
+        // Update the message text in history
+        messageHistory[idx].content = newText;
+        bubble.innerText = newText;
+
+        // Remove all messages after this point (both history and DOM)
+        const removed = messageHistory.splice(idx + 1);
+        messageIds.splice(idx + 1);
+
+        // Remove subsequent DOM elements
+        const allMsgEls = Array.from(chatHistory.querySelectorAll('.message[data-msgid]'));
+        allMsgEls.forEach(el => {
+            if (!messageIds.includes(el.dataset.msgid) && el !== msgEl) el.remove();
+        });
+
+        lastAssistantMsgEl = null;
+        alternativeResponses = [];
+        currentAltIndex = 0;
+
+        log(`Message edited at idx ${idx}, removed ${removed.length} subsequent messages`, 'info');
+
+        // Regenerate from this point
+        const fullHistory = promptConfigService.buildMessages(
+            newText, messageHistory.slice(0, idx), characterService, personaService
+        );
+        if (modeService.isRoleplay) {
+            const hint = modeService.getRoleplayHint(characterService.activeCharacter?.name);
+            const sys = fullHistory.find(m => m.role === 'system');
+            if (sys) sys.content += '\n\n' + hint;
+            else fullHistory.unshift({ role: 'system', content: hint });
+        } else if (modeService.isNovelist) {
+            const hint = modeService.getNovelistHint(characterService.activeCharacter?.name);
+            const sys = fullHistory.find(m => m.role === 'system');
+            if (sys) sys.content += '\n\n' + hint;
+            else fullHistory.unshift({ role: 'system', content: hint });
+        }
+
+        const activeCharacterId = characterService.activeCharacterId;
+        await _generateAndAppend(fullHistory, activeCharacterId);
+    };
 }
 
 /**
