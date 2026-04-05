@@ -4,6 +4,7 @@
  */
 import { llmService } from '../llm/llm.service.js';
 import { promptConfigService } from '../llm/prompt-config.service.js';
+import { presetService } from '../llm/preset.service.js';
 import { log } from '../utils/logger.js';
 import { characterService } from '../persona/character.service.js';
 import { personaService } from '../persona/persona.service.js';
@@ -181,6 +182,9 @@ export async function loadSettingsFromDrive() {
                 // Load characters from Drive and re-render sidebar
                 await characterService.loadCharactersFromDrive();
                 renderCharacterList();
+
+                // Load presets from Drive
+                await presetService.loadPresetsFromDrive();
 
                 // Load personas from Drive and render dropdown
                 await personaService.loadPersonasFromDrive();

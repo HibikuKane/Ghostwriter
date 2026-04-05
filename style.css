@@ -1595,3 +1595,45 @@ input[type="range"]:disabled {
     overflow-y: auto;
     background: rgba(0, 0, 0, 0.2);
 }
+
+/* ── Preset Bar ──────────────────────────────────────────────────────────── */
+
+.preset-bar {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.preset-select {
+    flex: 1;
+    font-size: 0.82rem;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-main);
+    padding: 4px 6px;
+}
+
+.preset-save-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.preset-name-input {
+    flex: 1;
+    font-size: 0.82rem;
+    padding: 4px 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-main);
+}
+
+.preset-btn {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+    white-space: nowrap;
+}

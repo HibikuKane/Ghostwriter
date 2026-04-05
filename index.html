@@ -341,6 +341,17 @@
                         <span class="label-hint">슬롯 순서 = LLM이 받는 순서 · ⊙ 기본 슬롯 · ◈ 구조 슬롯</span>
                     </p>
 
+                    <!-- Preset Bar -->
+                    <div class="preset-bar">
+                        <select id="preset-select" class="preset-select"></select>
+                        <button id="preset-load-btn" class="btn secondary preset-btn" title="선택한 프리셋 불러오기">불러오기</button>
+                        <button id="preset-delete-btn" class="btn text preset-btn" title="선택한 프리셋 삭제">삭제</button>
+                    </div>
+                    <div class="preset-save-row">
+                        <input type="text" id="preset-name-input" class="preset-name-input" placeholder="프리셋 이름 입력">
+                        <button id="preset-save-btn" class="btn primary preset-btn">현재 설정 저장</button>
+                    </div>
+
                     <div class="prompt-elements-header">
                         <span>파이프라인 슬롯</span>
                         <span class="label-hint" style="font-size:0.8rem;">▲▼ 순서 변경 · 체크박스 활성화</span>
