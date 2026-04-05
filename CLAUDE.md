@@ -77,6 +77,11 @@
 ### 자동 실행
 - `src/*.js` 수정 시 훅이 자동으로 `npm test --run` 실행
 
+### E2E 스모크 테스트 (PR 생성 직전)
+- `npm run test:e2e` 실행 — Playwright headless 로그인 플로우 스모크 테스트
+- 실패 시 PR 생성 전 자가수정 (최대 3회)
+- 설정: `release/playwright-setup` 브랜치 작업 후 활성화 (현재: 미설치)
+
 ### 테스트 추가 (src/ 수정 시)
 
 | 변경 유형 | 대응 |

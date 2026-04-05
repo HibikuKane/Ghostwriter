@@ -8,5 +8,10 @@ Thumbs.db
 # npm packages
 node_modules/
 
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
 # Strategic planning (private until project differentiation)
 .ideas/
