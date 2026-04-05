@@ -73,9 +73,9 @@
                     <div id="chat-section" class="card">
                         <!-- Mode Toggle Bar -->
                         <div id="chat-mode-bar" class="chat-mode-bar">
-                            <button class="mode-btn active" data-mode="chat">💬 채팅</button>
-                            <button class="mode-btn" data-mode="roleplay">🎭 롤플레잉</button>
-                            <button class="mode-btn" data-mode="novelist">📖 소설가</button>
+                            <button class="mode-btn active" data-mode="chat" data-i18n="chat.mode.chat">💬 채팅</button>
+                            <button class="mode-btn" data-mode="roleplay" data-i18n="chat.mode.roleplay">🎭 롤플레잉</button>
+                            <button class="mode-btn" data-mode="novelist" data-i18n="chat.mode.novelist">📖 소설가</button>
                         </div>
                         <div id="session-toolbar">
                             <span class="tooltip-wrap">
@@ -89,7 +89,7 @@
                             <select id="session-select">
                                 <option value="">새 세션</option>
                             </select>
-                            <button id="new-session-btn" class="btn text">🆕 새 대화</button>
+                            <button id="new-session-btn" class="btn text" data-i18n="chat.new_session">🆕 새 대화</button>
                         </div>
                         <div id="chat-history" class="chat-history">
                             <!-- Messages will appear here -->
@@ -98,9 +98,9 @@
                             </div>
                         </div>
                         <div class="chat-input-area">
-                            <input type="text" id="chat-input" placeholder="Type your message..." autocomplete="off">
-                            <button id="inspector-btn" class="btn text inspector-btn" title="최종 프롬프트 인스펙터">🔍</button>
-                            <button id="send-btn" class="btn primary">Send</button>
+                            <input type="text" id="chat-input" data-i18n-placeholder="chat.input.placeholder" placeholder="Type your message..." autocomplete="off">
+                            <button id="inspector-btn" class="btn text inspector-btn" data-i18n-title="chat.inspector" title="최종 프롬프트 인스펙터">🔍</button>
+                            <button id="send-btn" class="btn primary" data-i18n="chat.send">Send</button>
                         </div>
                     </div>
                 </div>
@@ -185,9 +185,9 @@
 
                 <!-- Tab Header -->
                 <div class="modal-tabs">
-                    <button class="tab-btn active" data-tab="settings-tab">설정</button>
-                    <button class="tab-btn" data-tab="persona-tab">페르소나</button>
-                    <button class="tab-btn" data-tab="prompt-tab">프롬프트</button>
+                    <button class="tab-btn active" data-tab="settings-tab" data-i18n="settings.tab.settings">설정</button>
+                    <button class="tab-btn" data-tab="persona-tab" data-i18n="settings.tab.persona">페르소나</button>
+                    <button class="tab-btn" data-tab="prompt-tab" data-i18n="settings.tab.prompt">프롬프트</button>
                 </div>
 
                 <!-- Settings Tab -->
@@ -296,9 +296,20 @@
                         </div>
                     </div>
 
+                    <!-- Language Selector -->
+                    <div class="form-divider"></div>
+                    <div class="form-group">
+                        <label for="lang-select" data-i18n="settings.language.label">언어 / Language</label>
+                        <select id="lang-select">
+                            <option value="ko">한국어</option>
+                            <option value="en">English</option>
+                            <option value="ja">日本語</option>
+                        </select>
+                    </div>
+
                     <div class="modal-actions">
-                        <button id="test-connection-btn" class="btn secondary">Test Connection</button>
-                        <button id="save-settings-btn" class="btn primary">Save & Close</button>
+                        <button id="test-connection-btn" class="btn secondary" data-i18n="settings.test_connection">Test Connection</button>
+                        <button id="save-settings-btn" class="btn primary" data-i18n="settings.save">Save & Close</button>
                     </div>
                 </div>
 
