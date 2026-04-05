@@ -13,12 +13,13 @@ Bridge:     ████████████████  100% ✅
 Phase 1.5:  ████████████████  100% ✅
 Phase 2:    ████████████████  100% ✅
 Phase 3:    ████████████████  100% ✅
-Phase 4:    ████████████████  100% ✅ ← 지금 여기
+Phase 4:    ████████████████  100% ✅
+Hardening:  ░░░░░░░░░░░░░░░░    0% ← 지금 여기
 Phase 5:    ░░░░░░░░░░░░░░░░    0% ← 다음
 ```
 
-**다음 목표**: Phase 5 — 보조 기능 & 폴리싱 (보조 모델 시스템 / 커스텀 CSS)  
-→ 상세: [`current-status.md`](./current-status.md), [`roadmap.md`](./roadmap.md)
+**다음 목표**: Pre-Phase 5 하드닝 스프린트 (UX 개선 / i18n 완비 / 테스트 고도화)  
+→ 상세: [`pre-phase5-hardening.md`](./pre-phase5-hardening.md), [`current-status.md`](./current-status.md)
 
 ---
 
@@ -50,6 +51,7 @@ Phase 5:    ░░░░░░░░░░░░░░░░    0% ← 다음
 | [`flow-hardening.md`](./flow-hardening.md) | 안정성·에러처리 작업 내역 |
 | [`testing-strategy.md`](./testing-strategy.md) | 테스트 자동화 전략 |
 | [`claude-code-optimizing.md`](./claude-code-optimizing.md) | 에이전트 협업 방법론 |
+| [`pre-phase5-hardening.md`](./pre-phase5-hardening.md) | Phase 5 전 하드닝 스프린트 항목 9가지 |
 
 ---
 
