@@ -99,6 +99,7 @@
                         </div>
                         <div class="chat-input-area">
                             <input type="text" id="chat-input" placeholder="Type your message..." autocomplete="off">
+                            <button id="inspector-btn" class="btn text inspector-btn" title="최종 프롬프트 인스펙터">🔍</button>
                             <button id="send-btn" class="btn primary">Send</button>
                         </div>
                     </div>
@@ -386,6 +387,16 @@
                         <button id="save-prompt-config-btn" class="btn primary">적용</button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Prompt Inspector Modal -->
+        <div id="inspector-modal" class="modal hidden">
+            <div class="modal-content inspector-modal-content">
+                <span id="close-inspector-btn" class="close">&times;</span>
+                <h2 class="inspector-title">🔍 프롬프트 인스펙터</h2>
+                <p class="inspector-desc">LLM에 실제로 전달되는 메시지 파이프라인 (현재 입력 기준)</p>
+                <div id="inspector-content" class="inspector-content"></div>
             </div>
         </div>
 

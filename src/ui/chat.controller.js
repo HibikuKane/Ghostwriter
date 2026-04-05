@@ -11,6 +11,7 @@ import { characterService } from '../persona/character.service.js';
 import { personaService } from '../persona/persona.service.js';
 import { showToast } from '../utils/toast.js';
 import { renderMarkdown } from '../utils/markdown.js';
+import { initInspector } from './inspector.controller.js';
 
 // DOM Elements
 const chatSection = document.getElementById('chat-section');
@@ -49,6 +50,7 @@ export function initChat() {
     }
 
     _initModeToggle();
+    initInspector(() => messageHistory, chatInput);
 }
 
 /**
