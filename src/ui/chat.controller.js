@@ -3,6 +3,7 @@
  * Manages the Chat Interface.
  */
 import { llmService } from '../llm/llm.service.js';
+import { modeService, CHAT_MODES } from '../chat/mode.service.js';
 import { log } from '../utils/logger.js';
 import { chatRepository } from '../memory/chat.repository.js';
 import { characterService } from '../persona/character.service.js';
@@ -40,6 +41,45 @@ export function initChat() {
     // Initialize session ID if not exists
     if (!currentSessionId) {
         currentSessionId = `chat_${new Date().toISOString().replace(/[:.]/g, '-')}`;
+    }
+
+    _initModeToggle();
+}
+
+/**
+ * Set up mode toggle buttons (Chat / Roleplay).
+ */
+function _initModeToggle() {
+    const modeBtns = document.querySelectorAll('#chat-mode-bar .mode-btn');
+    if (!modeBtns.length) return;
+
+    modeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const newMode = btn.dataset.mode;
+            modeService.setMode(newMode);
+
+            modeBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            _applyModeUI(newMode);
+            log(`Chat mode: ${newMode}`, 'info');
+        });
+    });
+}
+
+/**
+ * Apply visual changes based on the active mode.
+ * @param {string} mode
+ */
+function _applyModeUI(mode) {
+    const isRP = mode === CHAT_MODES.ROLEPLAY;
+    if (chatInput) {
+        chatInput.placeholder = isRP
+            ? '행동(*action*) 또는 대화를 입력하세요...'
+            : 'Type your message...';
+    }
+    if (chatSection) {
+        chatSection.classList.toggle('roleplay-active', isRP);
     }
 }
 
@@ -129,8 +169,13 @@ async function sendMessage() {
 
     // Construct full history with system prompt (+ keyword-triggered details) + persona
     const personaPrompt = personaService.getPersonaPrompt();
+    const sysMsg = characterService.getSystemMessageWithContext(text);
+    if (modeService.isRoleplay) {
+        const hint = modeService.getRoleplayHint(characterService.activeCharacter?.name);
+        sysMsg.content = (sysMsg.content ? sysMsg.content + '\n\n' : '') + hint;
+    }
     const fullHistory = [
-        characterService.getSystemMessageWithContext(text),
+        sysMsg,
         ...(personaPrompt ? [{ role: 'system', content: personaPrompt }] : []),
         ...messageHistory,
         { role: 'user', content: text }
@@ -184,8 +229,13 @@ async function reroll() {
     const personaPrompt = personaService.getPersonaPrompt();
     // Use the last user message for keyword context during reroll
     const lastUserMsg = [...messageHistory].reverse().find(m => m.role === 'user');
+    const rerollSysMsg = characterService.getSystemMessageWithContext(lastUserMsg?.content || '');
+    if (modeService.isRoleplay) {
+        const hint = modeService.getRoleplayHint(characterService.activeCharacter?.name);
+        rerollSysMsg.content = (rerollSysMsg.content ? rerollSysMsg.content + '\n\n' : '') + hint;
+    }
     const fullHistory = [
-        characterService.getSystemMessageWithContext(lastUserMsg?.content || ''),
+        rerollSysMsg,
         ...(personaPrompt ? [{ role: 'system', content: personaPrompt }] : []),
         ...messageHistory,
     ];

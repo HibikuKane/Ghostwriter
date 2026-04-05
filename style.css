@@ -1362,3 +1362,48 @@ input[type="range"]:disabled {
     width: auto;
     cursor: pointer;
 }
+
+/* ========================================
+   Chat Mode Toggle Bar
+======================================== */
+.chat-mode-bar {
+    display: flex;
+    gap: 6px;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border, #333);
+    background: rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+}
+
+.mode-btn {
+    background: none;
+    border: 1px solid var(--border, #444);
+    border-radius: 20px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 3px 14px;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+}
+
+.mode-btn:hover {
+    color: var(--text-main);
+    border-color: var(--accent);
+}
+
+.mode-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Subtle visual indicator when roleplay is active */
+#chat-section.roleplay-active .chat-input-area {
+    border-top: 2px solid var(--accent);
+}
+
+#chat-section.roleplay-active #chat-input {
+    border-color: var(--accent);
+}
