@@ -168,18 +168,16 @@ async function sendMessage() {
     alternativeResponses = [];
     currentAltIndex = 0;
 
-    // Construct full history via prompt config (respects element order / enabled state)
-    const sysMsgs = promptConfigService.buildSystemMessages(text, characterService, personaService);
+    // Build full message pipeline via prompt config (order, enabled state, history position)
+    const fullHistory = promptConfigService.buildMessages(
+        text, messageHistory, characterService, personaService
+    );
     if (modeService.isRoleplay) {
         const hint = modeService.getRoleplayHint(characterService.activeCharacter?.name);
-        if (sysMsgs.length > 0) sysMsgs[0].content += '\n\n' + hint;
-        else sysMsgs.push({ role: 'system', content: hint });
+        const firstSys = fullHistory.find(m => m.role === 'system');
+        if (firstSys) firstSys.content += '\n\n' + hint;
+        else fullHistory.unshift({ role: 'system', content: hint });
     }
-    const fullHistory = [
-        ...sysMsgs,
-        ...messageHistory,
-        { role: 'user', content: text }
-    ];
 
     messageHistory.push({ role: 'user', content: text });
     chatInput.value = '';
@@ -226,18 +224,18 @@ async function reroll() {
     }
 
     const activeCharacterId = characterService.activeCharacterId;
-    // Use the last user message for keyword context during reroll
+    // Use the last user message for keyword context; history already ends with it
     const lastUserMsg = [...messageHistory].reverse().find(m => m.role === 'user');
-    const rerollSysMsgs = promptConfigService.buildSystemMessages(lastUserMsg?.content || '', characterService, personaService);
+    const fullHistory = promptConfigService.buildMessages(
+        lastUserMsg?.content || '', messageHistory, characterService, personaService,
+        { skipCurrentMessage: true }
+    );
     if (modeService.isRoleplay) {
         const hint = modeService.getRoleplayHint(characterService.activeCharacter?.name);
-        if (rerollSysMsgs.length > 0) rerollSysMsgs[0].content += '\n\n' + hint;
-        else rerollSysMsgs.push({ role: 'system', content: hint });
+        const firstSys = fullHistory.find(m => m.role === 'system');
+        if (firstSys) firstSys.content += '\n\n' + hint;
+        else fullHistory.unshift({ role: 'system', content: hint });
     }
-    const fullHistory = [
-        ...rerollSysMsgs,
-        ...messageHistory,
-    ];
 
     log('Rerolling last assistant response', 'info');
     await _generateAndAppend(fullHistory, activeCharacterId);
