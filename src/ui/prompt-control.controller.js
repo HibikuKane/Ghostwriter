@@ -190,6 +190,10 @@ function _addCustomSlot() {
 
 function _showPreview() {
     if (!previewPanel || !previewContent) return;
+    if (!previewPanel.classList.contains('hidden')) {
+        previewPanel.classList.add('hidden');
+        return;
+    }
     previewContent.textContent = promptConfigService.buildPreview(characterService, personaService);
     previewPanel.classList.remove('hidden');
     previewPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
