@@ -21,9 +21,7 @@
 
 | ID | 태스크 | 상태 | 의존성 | 브랜치 |
 |----|--------|------|--------|--------|
-| P0-1 | Playwright E2E 세팅 | `WAITING_PR` | — | `release/playwright-setup` |
-
-> **P0-1 상세**: Playwright 설치 + headless 기본 설정. 로그인 플로우 스모크 테스트 1개 (성공 확인용). PR 생성 직전 자동 실행.
+| P0-1 | Playwright E2E 세팅 | `DONE` | — | `release/playwright-setup` |
 
 ---
 
@@ -31,32 +29,36 @@
 
 | ID | 태스크 | 상태 | 의존성 | 브랜치 |
 |----|--------|------|--------|--------|
-| P2-1 | 캐릭터 에셋 관리 (#2) — 상세 설명 필드 + 키워드 트리거 | `WAITING_PR` | — | `release/character-assets` |
-| P2-2 | 모델 세부 설정 (#3) — Temperature, Top-K UI | `WAITING_PR` | — | `release/model-params` |
-| P2-3 | 인앱 가이드 시스템 기반 구축 | `WAITING_PR` | — | `release/in-app-guide` |
-
-> **P2-1 상세**: `.ideas/features.md` #2 항목, `.ideas/technical-dependencies.md` Tier 2 참조
+| P2-1 | 캐릭터 에셋 관리 (#2) | `DONE` | — | `release/character-assets` |
+| P2-2 | 모델 세부 설정 (#3) | `DONE` | — | `release/model-params` |
+| P2-3 | 인앱 가이드 시스템 | `DONE` | — | `release/in-app-guide` |
 
 ---
 
-## Phase 3
+## Phase 3 — 고급 대화 모드 & 프롬프트 제어
 
 | ID | 태스크 | 상태 | 의존성 | 브랜치 |
 |----|--------|------|--------|--------|
-| P3-2 | 프롬프트 제어 UI (#4) | `WAITING_PR` | P2-1 ✅, 채팅 모드 안정화 ✅ | `release/prompt-control` |
-| P3-1 | 롤플레잉 모드 (#1.2) | `DONE` | P2-1 ✅, 채팅 모드 안정화 ✅ | `release/roleplay-mode` |
-| P3-3 | 프리셋 시스템 (#10) | `BLOCKED` | P2-2 ✅, P3-2 완료 대기 | — |
+| P3-1 | 롤플레잉 모드 (#1.2) | `DONE` | P2-1 ✅ | `release/roleplay-mode` |
+| P3-2 | 프롬프트 제어 UI (#4) | `DONE` | P3-1 ✅, P2-1 ✅ | `release/prompt-control` |
+| P3-3 | 프리셋 시스템 (#10) | `WAITING_PR` | P3-2 ✅ | `release/preset-system` |
+| P3-4 | 소설가 모드 (#1.3) | `WAITING_PR` | P3-1 ✅ | `release/novelist-mode` |
+| P3-5 | 프롬프트 인스펙터 (#13) | `WAITING_PR` | P3-2 ✅ | `release/prompt-inspector` |
+| P3-6 | 채팅 기록 편집 | `WAITING_PR` | — | `release/chat-history-edit` |
+
+---
+
+## Phase 4 — 다언어 & UX 개선
+
+| ID | 태스크 | 상태 | 의존성 | 브랜치 |
+|----|--------|------|--------|--------|
+| P4-1 | 다국어 UI (#5) — 언어팩 시스템 (ko/en/ja) | `WAITING_PR` | Phase 3 | `release/i18n-multilang` |
 
 ---
 
 ## 블로킹 로그
 
-_현재 블로킹 없음_
-
-<!-- 블로킹 발생 시 아래 형식으로 추가:
-| 날짜 | 태스크 ID | 실패 원인 | 시도 횟수 | 조치 |
-|------|-----------|-----------|-----------|------|
--->
+_없음_
 
 ---
 
@@ -64,9 +66,15 @@ _현재 블로킹 없음_
 
 | 완료일 | ID | 태스크 | PR |
 |--------|----|--------|----|
-| 2026-04-05 | HARNESS | Phase Harness 설정 (CLAUDE.md + .agent/ 문서 재설계) | — |
-| 2026-04-05 | P0-1 | Playwright E2E 세팅 — 로그인 화면 스모크 테스트 | #20 |
-| 2026-04-05 | P2-1 | 캐릭터 에셋 관리 — 상세 설명 + 키워드 트리거 + 아바타 이미지 | #21 |
-| 2026-04-05 | P2-2 | 모델 세부 설정 — Temperature/MaxTokens/Top-P 슬라이더 UI | #22 |
-| 2026-04-05 | P2-3 | 인앱 가이드 시스템 — ? 툴팁 기반 컨텍스트 도움말 | #23 |
-| 2026-04-05 | P3-2 | 프롬프트 제어 UI — 요소 순서/토글/메타/형식지정자/미리보기 | #25 |
+| 2026-04-05 | HARNESS | Phase Harness 설정 | — |
+| 2026-04-05 | P0-1 | Playwright E2E 세팅 | #20 |
+| 2026-04-05 | P2-1 | 캐릭터 에셋 관리 | #21 |
+| 2026-04-05 | P2-2 | 모델 세부 설정 | #22 |
+| 2026-04-05 | P2-3 | 인앱 가이드 시스템 | #23 |
+| 2026-04-05 | P3-1 | 롤플레잉 모드 | #24 |
+| 2026-04-05 | P3-2 | 프롬프트 제어 UI | #25 |
+| 2026-04-05 | P3-3 | 프리셋 시스템 | #27 (WAITING_PR) |
+| 2026-04-05 | P3-4 | 소설가 모드 | #28 (WAITING_PR) |
+| 2026-04-05 | P3-5 | 프롬프트 인스펙터 | #29 (WAITING_PR) |
+| 2026-04-05 | P3-6 | 채팅 기록 편집 | #30 (WAITING_PR) |
+| 2026-04-05 | P4-1 | 다국어 UI | #31 (WAITING_PR) |

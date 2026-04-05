@@ -11,12 +11,14 @@
  * - Separator selector
  */
 import { promptConfigService } from '../llm/prompt-config.service.js';
+import { presetService } from '../llm/preset.service.js';
 import { characterService } from '../persona/character.service.js';
 import { personaService } from '../persona/persona.service.js';
 import { DEFAULT_PROMPT_CONFIG } from '../config.js';
+import { showToast } from '../utils/toast.js';
 import { log } from '../utils/logger.js';
 
-// DOM
+// DOM — pipeline
 const elementsList   = document.getElementById('prompt-elements-list');
 const separatorSel   = document.getElementById('prompt-separator-select');
 const previewBtn     = document.getElementById('preview-prompt-btn');
@@ -25,6 +27,13 @@ const previewContent = document.getElementById('prompt-preview-content');
 const resetBtn       = document.getElementById('reset-prompt-config-btn');
 const saveBtn        = document.getElementById('save-prompt-config-btn');
 const addSlotBtn     = document.getElementById('add-prompt-slot-btn');
+
+// DOM — presets
+const presetSelect   = document.getElementById('preset-select');
+const presetLoadBtn  = document.getElementById('preset-load-btn');
+const presetSaveBtn  = document.getElementById('preset-save-btn');
+const presetDeleteBtn= document.getElementById('preset-delete-btn');
+const presetNameInput= document.getElementById('preset-name-input');
 
 // Slot types with editable textarea
 const EDITABLE_TYPES = new Set(['custom']);
@@ -45,7 +54,13 @@ export function initPromptControl() {
         });
     }
 
+    // Preset controls
+    if (presetLoadBtn)   presetLoadBtn.onclick   = _loadPreset;
+    if (presetSaveBtn)   presetSaveBtn.onclick   = _savePreset;
+    if (presetDeleteBtn) presetDeleteBtn.onclick = _deletePreset;
+
     _renderSlots();
+    _renderPresetSelect();
     log('Prompt control initialized', 'info');
 }
 
@@ -56,6 +71,7 @@ export function initPromptControl() {
 export function syncPromptControlUI() {
     if (!elementsList) return;
     _renderSlots();
+    _renderPresetSelect();
     if (separatorSel) separatorSel.value = promptConfigService.config.separator || '\n\n';
     if (previewPanel) previewPanel.classList.add('hidden');
 }
@@ -212,4 +228,54 @@ function _saveConfig() {
     saveBtn.disabled = true;
     setTimeout(() => { saveBtn.textContent = orig; saveBtn.disabled = false; }, 1500);
     log('Prompt config applied (persists on Settings save)', 'info');
+}
+
+// ── Preset UI ─────────────────────────────────────────────────────────────────
+
+function _renderPresetSelect() {
+    if (!presetSelect) return;
+    presetSelect.innerHTML = '<option value="">프리셋 선택...</option>';
+    for (const p of presetService.presets) {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        presetSelect.appendChild(opt);
+    }
+    const hasPresets = presetService.presets.length > 0;
+    if (presetDeleteBtn) presetDeleteBtn.disabled = !hasPresets;
+    if (presetLoadBtn)   presetLoadBtn.disabled   = !hasPresets;
+}
+
+function _loadPreset() {
+    const id = presetSelect?.value;
+    if (!id) return;
+    const preset = presetService.getPreset(id);
+    if (!preset) return;
+    promptConfigService.setConfig(JSON.parse(JSON.stringify(preset.config)));
+    syncPromptControlUI();
+    showToast(`프리셋 "${preset.name}" 로드됨`, 'success');
+}
+
+async function _savePreset() {
+    const name = presetNameInput?.value.trim();
+    if (!name) {
+        showToast('프리셋 이름을 입력해주세요.', 'warning');
+        return;
+    }
+    if (separatorSel) promptConfigService.config.separator = separatorSel.value;
+    const preset = presetService.addPreset(name, promptConfigService.config);
+    await presetService.savePresetToDrive(preset);
+    if (presetNameInput) presetNameInput.value = '';
+    _renderPresetSelect();
+    showToast(`프리셋 "${preset.name}" 저장됨`, 'success');
+}
+
+async function _deletePreset() {
+    const id = presetSelect?.value;
+    if (!id) return;
+    const preset = presetService.getPreset(id);
+    if (!preset) return;
+    await presetService.deletePreset(id);
+    _renderPresetSelect();
+    showToast(`프리셋 "${preset.name}" 삭제됨`, 'info');
 }
